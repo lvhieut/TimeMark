@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "272699060764",
+    "project_id": "timemarkmanage",
+    "storage_bucket": "timemarkmanage.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:272699060764:android:56f214c5c32e5c38aaa5d9",
+        "android_client_info": {
+          "package_name": "com.example.timemarkbase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnIcQaAehIrOq_ZoREJfHptmqdRFSFfbY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
