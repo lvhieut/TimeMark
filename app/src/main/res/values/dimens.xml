@@ -11,4 +11,7 @@
     <dimen name="dimen_50sp">50sp</dimen>
     <dimen name="dimen_26sp">26sp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="dimen_18sp">18sp</dimen>
+    <dimen name="dimen_12sp">12sp</dimen>
+    <dimen name="dimen_13sp">13sp</dimen>
 </resources>

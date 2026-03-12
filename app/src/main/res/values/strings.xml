@@ -2,6 +2,7 @@
     <string name="app_name">TimeMark Pro</string>
     <string name="app_title">TimeMark Pro</string>
     <string name="text_time_formater">d \'Tháng\' M, yyyy</string>
+    <string name="text_time_formater_v2">d/M/yyyy</string>
     <string name="text_day_demo">EEEE</string>
     <string name="text_address">Đang lấy địa chỉ…</string>
     <string name="text_time_content">Time</string>
@@ -10,6 +11,7 @@
     <string name="text_timemark_verified">Timemark Verified</string>
     <string name="cotent_m5c3k8qarjx83l">M5C3K8QARJX83L</string>
     <string name="name_fake">Họ tên : Hoàng Khánh Linh</string>
+    <string name="verified_image_fake">Mã Ảnh : 123456789999</string>
     <string name="choose_image">Chọn ảnh</string>
     <string name="text_save_image">Lưu ảnh</string>
     <string name="text_edit_image">Sửa thông tin</string>
@@ -27,4 +29,5 @@
     <string name="dimen_text_android_id">8977214762674</string>
     <string name="text_active_key">Mã Kích Hoạt</string>
     <string name="text_active_1">Kích hoạt</string>
+    <string name="image_verified_code">Mã ảnh: %1$s</string>
 </resources>

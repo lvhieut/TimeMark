@@ -120,6 +120,10 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
 
         binding?.btnSwitchGoogleMap?.isChecked
             ?.let { featureViewModel.setEnableImageGoogleMap(it) }
+        featureViewModel.setLatLon(
+            binding?.textLatitude?.text.toString().toDouble(),
+            binding?.textLongitude?.text.toString().toDouble(),
+        )
         dismiss()
     }
 

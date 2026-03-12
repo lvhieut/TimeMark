@@ -1,110 +1,144 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:layout_height="wrap_content">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/csLayout1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/txtAddress"
+        android:layout_margin="1dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.example.timemarkbase.custom_view.TimeDigitView
-            android:id="@+id/txtTime"
-            android:layout_width="wrap_content"
-            android:layout_height="28dp"
-            android:layout_marginStart="6dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        <!--        <com.example.timemarkbase.custom_view.TimeDigitView-->
+        <!--            android:id="@+id/txtTime"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="28dp"-->
+        <!--            android:layout_marginStart="6dp"-->
+        <!--            app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--            app:layout_constraintStart_toStartOf="parent"-->
+        <!--            app:layout_constraintTop_toTopOf="parent" />-->
 
 
         <View
             android:id="@+id/viewLine1"
             android:layout_width="3dp"
-            android:layout_height="32dp"
-            android:layout_marginHorizontal="4dp"
-            android:background="#F4B527"
-            app:layout_constraintBottom_toBottomOf="@+id/txtTime"
-            app:layout_constraintStart_toEndOf="@+id/txtTime"
-            app:layout_constraintTop_toTopOf="@+id/txtTime" />
+            android:layout_height="0dp"
+            android:background="@color/color_main_ui"
+            app:layout_constraintBottom_toBottomOf="@+id/csLayout"
+            app:layout_constraintStart_toStartOf="@+id/csLayout"
+            app:layout_constraintTop_toTopOf="@+id/csLayout" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:weightSum="2"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/csLayout"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
-            app:layout_constraintBottom_toBottomOf="@+id/txtTime"
-            app:layout_constraintStart_toEndOf="@+id/viewLine1"
-            app:layout_constraintTop_toTopOf="@+id/txtTime">
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/txtDay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:lineSpacingExtra="3dp"
+                android:maxLines="1"
+                android:paddingStart="6dp"
+                tools:textColor="@color/black"
+                android:text="@string/text_day_demo"
+                android:textColor="#FFFFFF"
+                android:textSize="@dimen/dimen_13sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/txtTime"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:text="22:56"
+                android:layout_marginStart="4dp"
+                android:textColor="@color/white"
+                android:textSize="@dimen/dimen_13sp"
+                tools:textColor="@color/black"
+                app:layout_constraintBottom_toBottomOf="@+id/txtDateFormater"
+                app:layout_constraintStart_toEndOf="@+id/txtDateFormater"
+                app:layout_constraintTop_toTopOf="@+id/txtDateFormater"
+                tools:text="22:56" />
 
             <TextView
                 android:id="@+id/txtDateFormater"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:paddingBottom="4dp"
                 android:text="@string/text_time_formater"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="@dimen/dimen_13sp"
+                android:layout_marginStart="4dp"
+                app:layout_constraintBottom_toBottomOf="@+id/txtDay"
+                app:layout_constraintStart_toEndOf="@+id/txtDay"
+                app:layout_constraintTop_toTopOf="@+id/txtDay"
+                tools:text="Thu 5, 12/03/2026"
+                tools:textColor="@color/black" />
 
             <TextView
-                android:id="@+id/txtDay"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:paddingTop="4dp"
-                android:text="@string/text_day_demo"
+                android:id="@+id/txtAddress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="3dp"
+                android:maxLines="2"
+                android:layout_marginTop="8dp"
+                android:paddingStart="6dp"
+                tools:textColor="@color/black"
+                android:text="@string/text_address"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="@dimen/dimen_13sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/txtDay"
+                app:layout_constraintStart_toStartOf="parent" />
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
-        android:id="@+id/txtAddress"
-        android:layout_width="@dimen/dimen_200dp"
-        android:layout_height="wrap_content"
-        android:maxLines="2"
-        android:paddingStart="6dp"
-        android:text="@string/text_address"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toTopOf="@+id/txtNameUser"
-        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/txtNameUser"
         android:layout_width="@dimen/dimen_200dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
         android:background="@drawable/bg_custom_text_view"
         android:maxLines="2"
         android:paddingStart="6dp"
         android:text="@string/name_fake"
-        android:layout_marginBottom="4dp"
         android:textColor="@color/white"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toTopOf="@+id/txtLatAndLon"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:textSize="@dimen/dimen_13sp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/csLayout1" />
 
     <TextView
-        android:id="@+id/txtLatAndLon"
-        android:layout_width="@dimen/dimen_200dp"
+        android:id="@+id/txtImageVerified"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:background="@drawable/bg_custom_text_view"
+        android:drawableStart="@drawable/icon_verified_v2"
+        android:drawablePadding="8dp"
         android:maxLines="1"
-        android:visibility="gone"
+        android:padding="1dp"
         android:paddingStart="6dp"
-        tools:text="@string/name_fake"
-        android:textColor="@color/white"
-        android:textSize="12sp"
+        android:text="@string/verified_image_fake"
+        android:textColor="#D9E4DFDF"
+        android:textSize="@dimen/dimen_13sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtNameUser"
+        tools:textColor="@color/black" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

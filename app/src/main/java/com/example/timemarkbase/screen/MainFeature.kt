@@ -12,6 +12,11 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.hardware.GeomagneticField
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
@@ -31,6 +36,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -38,13 +44,10 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.example.timemarkbase.BottomSheetFragment
-import com.example.timemarkbase.BuildConfig
 import com.example.timemarkbase.R
 import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
+import com.example.timemarkbase.utils.CompassManager
 import com.example.timemarkbase.utils.SelectMode
-import com.example.timemarkbase.utils.loadLocationMap
-import com.example.timemarkbase.utils.loadMapSnapshot
-import com.example.timemarkbase.utils.loadStaticMap
 import com.example.timemarkbase.view_model.MainFeatureViewModel
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -60,7 +63,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class MainFeature : AppCompatActivity() {
+class MainFeature : AppCompatActivity(), SensorEventListener {
 
     private val pickMediaLauncher =
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
@@ -83,6 +86,9 @@ class MainFeature : AppCompatActivity() {
                                     }
                                     originalBitmap = bitmap
                                     currentVerifiedCode = generateSecureCode()
+
+                                    val formattedCode = getString(R.string.image_verified_code, currentVerifiedCode)
+                                    binding?.timeMarkView?.txtImageVerified?.text = formattedCode
 
                                     updateWatermark()
                                 }
@@ -117,6 +123,11 @@ class MainFeature : AppCompatActivity() {
     private var currentVerifiedCode = ""
     private var currentLat: Double = 0.0
     private var currentLon: Double = 0.0
+    private lateinit var sensorManager: SensorManager
+    private var rotationSensor: Sensor? = null
+    private val commonTypeface: Typeface by lazy {
+        Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -134,9 +145,10 @@ class MainFeature : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
+        applyCommonFont()
         initObserve()
-
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
         getDateFormater()
         getTimeFormatter()
         checkLocationPermissionAndGetAddress()
@@ -160,6 +172,8 @@ class MainFeature : AppCompatActivity() {
 
                             originalBitmap = bitmap
                             currentVerifiedCode = generateSecureCode()
+                            val formattedCode = getString(R.string.image_verified_code, currentVerifiedCode)
+                            binding?.timeMarkView?.txtImageVerified?.text = formattedCode
 
                             updateWatermark()
                         }
@@ -180,9 +194,7 @@ class MainFeature : AppCompatActivity() {
             featureViewModel.setFullName(binding?.timeMarkView?.txtNameUser?.text.toString())
             featureViewModel.setDay(binding?.timeMarkView?.txtDay?.text.toString())
             featureViewModel.setAddress(binding?.timeMarkView?.txtAddress?.text.toString())
-            binding?.timeMarkView?.txtTime?.let { timeView ->
-                featureViewModel.setTime(timeView.getTime())
-            }
+            featureViewModel.setTime(binding?.timeMarkView?.txtTime?.text.toString())
             featureViewModel.setDate(binding?.timeMarkView?.txtDateFormater?.text.toString())
         }
 
@@ -251,7 +263,11 @@ class MainFeature : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun initObserve() {
         featureViewModel.time.observe(this) {
-            binding?.timeMarkView?.txtTime?.setTime(it)
+            binding?.timeMarkView?.txtTime?.text = it
+        }
+
+        featureViewModel.isEnableVerifiedText.observe(this) {
+            binding?.timeMarkView?.txtImageVerified?.isVisible = it
         }
 
         featureViewModel.day.observe(this) {
@@ -267,8 +283,7 @@ class MainFeature : AppCompatActivity() {
         }
 
         featureViewModel.latLon.observe(this) { latLon ->
-            binding?.timeMarkView?.txtLatAndLon?.text = "Toạ độ: %.5f, %.5f".format(latLon.first, latLon.second)
-//            binding?.imgMapGg?.loadStaticMap(latLon.first, latLon.second, BuildConfig.API_KEY)
+            binding?.txtLatAndLon?.text = "%.6f°N, %.6f°E".format(latLon.first, latLon.second)
         }
 
         featureViewModel.fullName.observe(this) {
@@ -288,8 +303,9 @@ class MainFeature : AppCompatActivity() {
         }
 
         featureViewModel.isEnableGoogleMap.observe(this) {
-            binding?.imgMapGg?.isVisible = it
-            binding?.timeMarkView?.txtLatAndLon?.isVisible = it
+//            binding?.imgMapGg?.isVisible = it
+//            binding?.timeMarkView?.txtLatAndLon?.isVisible = it
+            binding?.csLayoutMap?.isVisible = it
         }
     }
 
@@ -329,12 +345,21 @@ class MainFeature : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        rotationSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        } ?: run {
+            Log.e("SensorError", "Thiết bị không hỗ trợ Rotation Vector Sensor")
+        }
+    }
 
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
     }
 
     private fun getDateFormater() {
         val currentDate = Date(System.currentTimeMillis())
-        val patternDate = getString(R.string.text_time_formater)
+        val patternDate = getString(R.string.text_time_formater_v2)
         val patternDay = getString(R.string.text_day_demo)
         val formatter = SimpleDateFormat(patternDate, Locale("vi"))
         val dayFormatter = SimpleDateFormat(patternDay, Locale("vi"))
@@ -368,7 +393,7 @@ class MainFeature : AppCompatActivity() {
         val currentDate = Date()
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         val formattedTime = timeFormatter.format(currentDate)
-        binding?.timeMarkView?.txtTime?.setTime(formattedTime)
+        binding?.timeMarkView?.txtTime?.text = formattedTime
     }
 
     private fun updateWatermark() {
@@ -431,30 +456,60 @@ class MainFeature : AppCompatActivity() {
     }
 
     @SuppressLint("MissingPermission")
-    fun getCurrentLocation(
+    private fun getCurrentLocation(
         activity: Activity,
         onResult: (Location?) -> Unit
     ) {
+
         val fusedClient =
             LocationServices.getFusedLocationProviderClient(activity)
 
-        val request = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            1000
-        )
-            .setMaxUpdates(1)
-            .build()
+        if (ActivityCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            onResult(null)
+            return
+        }
 
-        fusedClient.requestLocationUpdates(
-            request,
-            object : LocationCallback() {
-                override fun onLocationResult(result: LocationResult) {
-                    fusedClient.removeLocationUpdates(this)
-                    onResult(result.lastLocation)
+        fusedClient.lastLocation
+            .addOnSuccessListener { location ->
+
+                if (location != null) {
+                    onResult(location)
+                    return@addOnSuccessListener
                 }
-            },
-            Looper.getMainLooper()
-        )
+
+                // 3️⃣ Nếu null thì request GPS update
+                val request = LocationRequest.Builder(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    1000
+                )
+                    .setMaxUpdates(1)
+                    .build()
+
+                fusedClient.requestLocationUpdates(
+                    request,
+                    object : LocationCallback() {
+
+                        override fun onLocationResult(result: LocationResult) {
+                            fusedClient.removeLocationUpdates(this)
+
+                            val newLocation = result.lastLocation
+                            onResult(newLocation)
+                        }
+                    },
+                    Looper.getMainLooper()
+                )
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
     }
 
     fun generateSecureCode(): String {
@@ -622,6 +677,95 @@ class MainFeature : AppCompatActivity() {
 
         canvas.restore()
         return result
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        Log.d("TAG::", "event: $event")
+        Log.d("TAG::", "event: ${event?.sensor?.type}")
+        if (event?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
+            val rotationMatrix = FloatArray(9)
+            val orientationValues = FloatArray(3)
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+            SensorManager.getOrientation(rotationMatrix, orientationValues)
+            Log.d("TAG::", "event: quay")
+
+            // 1. Tính góc (0 - 360 độ)
+            var bearing = Math.toDegrees(orientationValues[0].toDouble()).toFloat()
+            if (bearing < 0) bearing += 360f // Đưa về khoảng 0-360
+
+            // 2. Lấy hướng chữ (N, S, E, W...)
+            val directionStr = getDirectionName(bearing)
+
+            binding?.iconCompass?.rotation = -bearing
+
+            // 4. Cập nhật TextView tổng hợp
+            val displayStr = "%.1f°%s".format(
+                bearing,
+                directionStr
+            )
+
+            binding?.tvDirection?.text = displayStr
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+    }
+
+    private fun getDirectionName(bearing: Float): String {
+        return when (bearing) {
+            in 0f..22.5f, in 337.5f..360f -> "N"
+            in 22.5f..67.5f -> "NE"
+            in 67.5f..112.5f -> "E"
+            in 112.5f..157.5f -> "SE"
+            in 157.5f..202.5f -> "S"
+            in 202.5f..247.5f -> "SW"
+            in 247.5f..292.5f -> "W"
+            in 292.5f..337.5f -> "NW"
+            else -> "N"
+        }
+    }
+
+    fun calculateFinalBearing(
+        currentLoc: Location,
+        destLoc: Location,
+        azimuth: Float
+    ): Float {
+        // 1. Tính toán Declination (Độ lệch từ trường)
+        val geoField = GeomagneticField(
+            currentLoc.latitude.toFloat(),
+            currentLoc.longitude.toFloat(),
+            currentLoc.altitude.toFloat(),
+            System.currentTimeMillis()
+        )
+        val declination = geoField.declination
+
+        // 2. Điều chỉnh azimuth từ Magnetic North sang True North
+        // Sensor trả về âm nếu lệch trái, dương nếu lệch phải
+        val trueHeading = azimuth + declination
+
+        // 3. Tính bearing từ mình đến đích (độ Đông của True North)
+        val bearingToDest = currentLoc.bearingTo(destLoc)
+
+        // 4. Tính góc quay tương đối của mũi tên
+        // Công thức: Góc cần quay = (Góc tới đích) - (Hướng máy đang nhìn)
+        var finalRotation = bearingToDest - trueHeading
+
+        finalRotation = (finalRotation + 360) % 360
+
+        return finalRotation
+    }
+
+    private fun applyCommonFont() {
+        val textViews = listOf(
+            binding?.timeMarkView?.txtTime,
+            binding?.timeMarkView?.txtDay,
+            binding?.timeMarkView?.txtDateFormater,
+            binding?.timeMarkView?.txtAddress,
+            binding?.timeMarkView?.txtNameUser,
+            binding?.timeMarkView?.txtImageVerified
+        )
+
+        textViews.forEach { it?.typeface = commonTypeface }
     }
 
 }
