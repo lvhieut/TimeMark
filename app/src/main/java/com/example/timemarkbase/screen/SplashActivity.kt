@@ -1,10 +1,8 @@
 package com.example.timemarkbase.screen
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -12,17 +10,22 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.timemarkbase.R
 import com.example.timemarkbase.config.fb_ext.parseUserConfig
+import com.example.timemarkbase.utils.ExpiryWarningDialog
 import com.example.timemarkbase.utils.UserPrefs
 import com.example.timemarkbase.utils.getAndroidID
 import com.google.firebase.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.remoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : AppCompatActivity() {
 
     private lateinit var remoteConfig: FirebaseRemoteConfig
+    private var daysLeft: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +43,6 @@ class SplashActivity : AppCompatActivity() {
     private fun fetchConfigAndNavigate() {
         remoteConfig.fetchAndActivate()
             .addOnCompleteListener { task ->
-                Log.d("TAG::", "task: ${task.isSuccessful} + ${task.isComplete}")
                 if (task.isSuccessful) {
                     handleRemoteConfig(task.isSuccessful)
                 }
@@ -50,6 +52,7 @@ class SplashActivity : AppCompatActivity() {
     private fun goNext() {
         if (isFinishing) return
         val intent = Intent(this, ActiveActivity::class.java)
+        intent.putExtra("expiry_warning", "Tài khoản sắp hết hạn sau $daysLeft ngày")
         startActivity(intent)
         finish()
     }
@@ -57,6 +60,7 @@ class SplashActivity : AppCompatActivity() {
     private fun goNextSelect() {
         if (isFinishing) return
         val intent = Intent(this, SelectModeEditImageActivity::class.java)
+        intent.putExtra("expiry_warning", "Tài khoản sắp hết hạn sau $daysLeft ngày")
         startActivity(intent)
         finish()
     }
@@ -65,7 +69,7 @@ class SplashActivity : AppCompatActivity() {
         remoteConfig = Firebase.remoteConfig
 
         val settings = remoteConfigSettings {
-            minimumFetchIntervalInSeconds = 300
+            minimumFetchIntervalInSeconds = 600
         }
         remoteConfig.setConfigSettingsAsync(settings)
     }
@@ -86,42 +90,66 @@ class SplashActivity : AppCompatActivity() {
         val config = parseUserConfig(json)
         val androidId = getAndroidID()
 
-        // 🔴 1. ƯU TIÊN check Android ID
         val remoteUser = config.listUserId
             .firstOrNull { it.userId == androidId }
-        Log.d("TAG::", "remoteUser: $remoteUser")
 
-        // ❌ Android ID KHÔNG TỒN TẠI / BỊ XOÁ
         if (remoteUser == null) {
             UserPrefs.clearUser(this)
-            Log.d("TAG::", "clearUser (remoteUser == null)")
             goNext()
+            return
+        }
+        val valid = isValidDueDate(remoteUser.dueDate)
+        if (!valid) {
             return
         }
 
         val remotePassword = remoteUser.activeKey
         val localPassword = UserPrefs.getPassword(this)
-        Log.d("TAG::", "remotePassword: $remotePassword + localPassword: $localPassword")
 
-        // 🟡 2. Lần đầu / clear app
         if (localPassword == null) {
             UserPrefs.saveUser(this, androidId, remotePassword)
             goNext()
             return
         }
 
-        // 🔁 3. Android ID đúng nhưng password ĐÃ ĐỔI
         if (localPassword != remotePassword) {
             UserPrefs.clearUser(this)
             goNext()
             return
         }
 
-        // ✅ 4. Android ID + password đều hợp lệ
         goNextSelect()
     }
 
-    override fun onResume() {
-        super.onResume()
+    private fun isValidDueDate(dueDate: String): Boolean {
+        return try {
+            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            formatter.isLenient = false
+
+            val due = formatter.parse(dueDate) ?: return false
+
+            val todayStr = formatter.format(Date())
+            val today = formatter.parse(todayStr)!!
+
+            val diffMillis = due.time - today.time
+            daysLeft = (diffMillis / (24 * 60 * 60 * 1000)).toInt()
+
+            return if (today.after(due)) {
+                ExpiryWarningDialog("Người dùng này đã sử dụng quá hạn").show(
+                    supportFragmentManager,
+                    "expiry_dialog"
+                )
+                false
+            } else {
+                val twoDaysMillis = 2 * 24 * 60 * 60 * 1000
+                if (diffMillis <= twoDaysMillis) {
+                    //Todo
+                    Log.d("TAG::", "daysLeft: $daysLeft")
+                }
+                true
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 }

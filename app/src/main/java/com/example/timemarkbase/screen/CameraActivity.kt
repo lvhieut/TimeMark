@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
@@ -28,7 +29,9 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var previewView: PreviewView
     private var captureButton: ImageView? = null
     private lateinit var switchCameraButton: ImageView
+    private lateinit var iconBack: ImageView
     private lateinit var imageCapture: ImageCapture
+    private lateinit var flashView: View
     private var cameraSelector: CameraSelector =
         CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -40,9 +43,17 @@ class CameraActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         switchCameraButton = findViewById(R.id.btnSwitch)
         captureButton = findViewById(R.id.btnCapture)
+        iconBack = findViewById(R.id.iconBack)
+        flashView = findViewById(R.id.flashView)
 
         captureButton?.setOnClickListener {
+            animateCaptureButton()
+            animateFlash()
             takePhoto()
+        }
+
+        iconBack.setOnClickListener {
+            finish()
         }
 
         starCamWithPermission()
@@ -116,7 +127,7 @@ class CameraActivity : AppCompatActivity() {
         val outputOptions =
             ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
-        imageCapture.takePicture(
+            imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
@@ -158,5 +169,34 @@ class CameraActivity : AppCompatActivity() {
         if (requestCode == 1001 && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
             startCamera()
         }
+    }
+
+    private fun animateCaptureButton() {
+        captureButton?.animate()
+            ?.scaleX(0.85f)
+            ?.scaleY(0.85f)
+            ?.setDuration(80)
+            ?.withEndAction {
+                captureButton?.animate()
+                    ?.scaleX(1f)
+                    ?.scaleY(1f)
+                    ?.setDuration(80)
+                    ?.start()
+            }
+            ?.start()
+    }
+
+    private fun animateFlash() {
+        flashView.alpha = 0f
+        flashView.animate()
+            .alpha(0.8f)
+            .setDuration(50)
+            .withEndAction {
+                flashView.animate()
+                    .alpha(0f)
+                    .setDuration(120)
+                    .start()
+            }
+            .start()
     }
 }

@@ -1,3 +1,7 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,14 +12,42 @@ android {
     namespace = "com.example.timemarkbase"
     compileSdk = 35
 
+    flavorDimensions += "mode"
+
     defaultConfig {
         applicationId = "com.example.timemarkbase"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField(
+            "String",
+            "API_KEY",
+            "\"AIzaSyDLkb82VOZNFs8QD5Kc1Bcnk5541Llnh60\""
+        )
+    }
+
+    applicationVariants.all {
+        val outputFileName = "TimeMark_Pro" +
+                "_${name}" +
+                "_ver${versionName}.apk"
+        outputs.all {
+            val output = this as? BaseVariantOutputImpl
+            output?.outputFileName = outputFileName
+        }
+    }
+
+    productFlavors {
+        create("dev") {
+            dimension = "mode"
+            applicationId = "com.example.timemarkbase"
+        }
+        create("prod") {
+            dimension = "mode"
+            applicationId = "com.example.timemarkbase"
+        }
     }
 
     buildTypes {
@@ -39,6 +71,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -48,6 +81,10 @@ android {
     }
     buildFeatures {
         viewBinding = true
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 }
 
@@ -87,4 +124,9 @@ dependencies {
     //firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.config)
+
+    implementation (libs.osmdroid.android)
+    implementation (libs.osmdroid.wms)
+    implementation (libs.osmdroid.mapsforge)
+    implementation (libs.play.services.maps)
 }

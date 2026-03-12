@@ -52,13 +52,13 @@
                 android:id="@+id/androidId"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
                 android:textColor="@color/black"
                 android:textSize="@dimen/dimen_30sp"
-                app:layout_constraintBottom_toBottomOf="@id/textAndroidId"
+                android:text=""
+                app:layout_constraintTop_toBottomOf="@id/textAndroidId"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textAndroidId"
-                app:layout_constraintTop_toTopOf="@id/textAndroidId" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/textAndroidId" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.textfield.TextInputLayout

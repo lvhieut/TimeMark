@@ -101,6 +101,66 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
+            android:id="@+id/enableGoogleMap"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="invisible"
+            android:paddingStart="16dp"
+            android:weightSum="1">
+
+            <TextView
+                android:id="@+id/txtVisibilityGoogleMap"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="@dimen/dimen_20sp"
+                android:text="Hiển thị bản đồ" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/btnSwitchGoogleMap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="30dp" />
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textLat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:hint="Vĩ độ"
+            android:visibility="gone"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="#897A7A"
+            app:endIconMode="clear_text">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/textLatitude"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textLon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:hint="Kinh độ"
+            android:visibility="gone"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="#897A7A"
+            app:endIconMode="clear_text">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/textLongitude"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
             android:id="@+id/enableNameCustomer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -145,6 +205,31 @@
                 android:layout_marginEnd="30dp" />
 
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/enableTextVerified"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+            <TextView
+                android:id="@+id/txtVisibilityVerified"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:text="Hiển thị mã định dạng" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/btnSwitchVerifiedText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="30dp" />
+
+        </LinearLayout>
+
+
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btbSaveAction"

@@ -27,9 +27,21 @@
             android:adjustViewBounds="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:background="#6D0C0C" />
+            app:layout_constraintVertical_bias="0.502"
+            tools:src="@tools:sample/avatars" />
+
+        <ImageView
+            android:id="@+id/imgMapGg"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_margin="4dp"
+            android:visibility="gone"
+            android:background="@color/black"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/imgPreview" />
 
         <ImageView
             android:id="@+id/imgLogoCompany"
@@ -64,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/be_vietnam_pro"
                 android:text="@string/text_time_content"
-                android:textColor="#F4B527"
+                android:textColor="#FFC107"
                 android:textSize="@dimen/dimen_14sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -76,11 +88,12 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/be_vietnam_pro"
                 android:text="@string/text_mark_content"
-                android:textColor="@color/white"
+                android:textColor="#F2F2F2"
                 android:textSize="@dimen/dimen_14sp"
                 app:layout_constraintBottom_toBottomOf="@id/textTime"
                 app:layout_constraintStart_toEndOf="@+id/textTime"
-                app:layout_constraintTop_toTopOf="@+id/textTime" />
+                app:layout_constraintTop_toTopOf="@+id/textTime"
+                app:layout_constraintVertical_bias="0.0" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -101,23 +114,19 @@
             android:id="@+id/llEncrypt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="138dp"
-            android:layout_marginEnd="-174dp"
             android:orientation="vertical"
-            android:rotation="-90"
-            android:weightSum="3"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/imgPreview"
             app:layout_constraintEnd_toEndOf="@id/imgPreview"
-            app:layout_constraintTop_toTopOf="@id/imgPreview"
-            app:layout_constraintVertical_bias="0.5">
+            app:layout_constraintTop_toTopOf="@id/imgPreview">
 
             <ImageView
                 android:id="@+id/icon_verified"
                 android:layout_width="8dp"
                 android:layout_height="10dp"
-                android:layout_weight="1"
                 android:scaleType="fitCenter"
                 android:src="@drawable/icon_verified"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -127,29 +136,29 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:fontFamily="@font/be_vietnam_pro"
+                android:fontFamily="@font/rajdhani_regular"
+                android:shadowColor="#50000000"
                 android:text="@string/cotent_m5c3k8qarjx83l"
-                android:textColor="@color/white"
-                android:textSize="@dimen/dimen_10sp"
-                app:layout_constraintBottom_toBottomOf="@id/icon_verified"
+                android:textColor="#EEEEEE"
+                android:textSize="11sp"
                 app:layout_constraintStart_toEndOf="@+id/icon_verified"
-                app:layout_constraintTop_toTopOf="@+id/icon_verified"
-                tools:textColor="@color/black" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:textColor="#EEEEEE" />
 
             <TextView
                 android:id="@+id/textVerified"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:fontFamily="@font/be_vietnam_pro"
+                android:layout_marginStart="2dp"
+                android:fontFamily="@font/rajdhani_regular"
+                android:shadowColor="#50000000"
                 android:text="@string/text_timemark_verified"
-                android:textColor="@color/white"
-                android:textSize="9sp"
+                android:textColor="#EEEEEE"
+                android:textSize="11sp"
                 app:layout_constraintBottom_toBottomOf="@id/textEncrypt"
                 app:layout_constraintStart_toEndOf="@+id/textEncrypt"
-                app:layout_constraintTop_toTopOf="@+id/textEncrypt"
-                tools:textColor="@color/black" />
+                app:layout_constraintTop_toTopOf="@+id/textEncrypt" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -26,16 +26,36 @@ class MainFeatureViewModel: ViewModel() {
     private val _address = MutableLiveData<String>()
     val address: LiveData<String> get() = _address
 
+    private val _latLon = MutableLiveData<Pair<Double, Double>>()
+    val latLon: LiveData<Pair<Double, Double>> get() = _latLon
+
+    private val _isEnableVerifiedText = MutableLiveData(false)
+    val isEnableVerifiedText: LiveData<Boolean> get() = _isEnableVerifiedText
+
+    private val _isEnableGoogleMap = MutableLiveData(false)
+    val isEnableGoogleMap: LiveData<Boolean> get() = _isEnableGoogleMap
+
     fun setTime(time: String) { _time.value = time }
     fun setDate(date: String) { _date.value = date }
     fun setDay(day: String) { _day.value = day }
     fun setAddress(address: String) { _address.value = address }
     fun setFullName(name: String) { _fullName.value = name }
+    fun setLatLon(lat: Double, lon: Double) {
+        _latLon.value = Pair(lat, lon)
+    }
     fun setEnableFullName(enable: Boolean) {
         _isEnableFullName.value = enable
     }
 
     fun setEnableLogo(enable: Boolean) {
         _isEnableLogo.value = enable
+    }
+
+    fun setEnableVerifiedText(enable: Boolean) {
+        _isEnableVerifiedText.value = enable
+    }
+
+    fun setEnableImageGoogleMap(enable: Boolean) {
+        _isEnableGoogleMap.value = enable
     }
 }

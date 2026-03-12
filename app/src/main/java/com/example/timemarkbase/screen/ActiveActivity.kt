@@ -20,6 +20,9 @@ import com.google.firebase.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.remoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class ActiveActivity : AppCompatActivity() {
 
@@ -35,7 +38,7 @@ class ActiveActivity : AppCompatActivity() {
         // Setup Firebase Remote Config
         remoteConfig = Firebase.remoteConfig
         val configSettings = remoteConfigSettings {
-            minimumFetchIntervalInSeconds = 300
+            minimumFetchIntervalInSeconds = 600
         }
         remoteConfig.setConfigSettingsAsync(configSettings)
     }
@@ -44,7 +47,6 @@ class ActiveActivity : AppCompatActivity() {
         super.onResume()
         val androidId = getAndroidID()
         binding.androidId.text = androidId
-        Log.d("TAG::", "androidId: $androidId")
         binding.btnActive.setOnClickListener {
             val inputKey = binding.textActive.text.toString().trim()
             binding.androidId.text = androidId
@@ -67,7 +69,6 @@ class ActiveActivity : AppCompatActivity() {
                         }
 
                         if (matchedUser != null) {
-                            // Hợp lệ → lưu SharedPreferences + chuyển màn
                             UserPrefs.saveUser(this, androidId, inputKey)
                             goNext()
                         } else {
@@ -84,7 +85,9 @@ class ActiveActivity : AppCompatActivity() {
     }
 
     private fun goNext() {
+        val message = intent.getStringExtra("expiry_warning")
         val intent = Intent(this, SelectModeEditImageActivity::class.java)
+        intent.putExtra("expiry_warning", message)
         startActivity(intent)
         finish()
     }

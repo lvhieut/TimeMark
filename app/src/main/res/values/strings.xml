@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">TimeMarkBase</string>
-    <string name="app_title">Time Mark Pro</string>
+    <string name="app_name">TimeMark Pro</string>
+    <string name="app_title">TimeMark Pro</string>
     <string name="text_time_formater">d \'Tháng\' M, yyyy</string>
     <string name="text_day_demo">EEEE</string>
     <string name="text_address">Đang lấy địa chỉ…</string>
@@ -12,6 +12,7 @@
     <string name="name_fake">Họ tên : Hoàng Khánh Linh</string>
     <string name="choose_image">Chọn ảnh</string>
     <string name="text_save_image">Lưu ảnh</string>
+    <string name="text_edit_image">Sửa thông tin</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="text_take_a_pic">Chụp ảnh</string>
     <string name="text_take_img">Chọn ảnh</string>

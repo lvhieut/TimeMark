@@ -1,7 +1,7 @@
 package com.example.timemarkbase
 
+import android.annotation.SuppressLint
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -40,8 +40,17 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         binding?.btnSwitchEnableLogo?.setOnCheckedChangeListener { _, isChecked ->
             featureViewModel.setEnableLogo(isChecked)
         }
+
+        binding?.btnSwitchVerifiedText?.setOnCheckedChangeListener { _, isChecked ->
+            featureViewModel.setEnableVerifiedText(isChecked)
+        }
+
+        binding?.btnSwitchGoogleMap?.setOnCheckedChangeListener { _, isChecked ->
+            featureViewModel.setEnableImageGoogleMap(isChecked)
+        }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun initObserve() {
         featureViewModel.time.observe(viewLifecycleOwner) {
             binding?.textEditTime?.setText(it)
@@ -63,12 +72,34 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
             binding?.textEditAddres?.setText(it)
         }
 
+        featureViewModel.latLon.observe(viewLifecycleOwner) {
+            binding?.textLatitude?.setText(it.first.toString())
+            binding?.textLongitude?.setText(it.second.toString())
+        }
+
+
         featureViewModel.isEnableFullName.observe(viewLifecycleOwner) {
             binding?.btnSwitchEnableName?.isChecked = it
         }
 
         featureViewModel.isEnableLogo.observe(viewLifecycleOwner) {
             binding?.btnSwitchEnableLogo?.isChecked = it
+        }
+
+        featureViewModel.isEnableVerifiedText.observe(viewLifecycleOwner) {
+            binding?.btnSwitchVerifiedText?.isChecked = it
+        }
+
+        featureViewModel.isEnableGoogleMap.observe(viewLifecycleOwner) {
+            binding?.btnSwitchGoogleMap?.isChecked = it
+
+            if (it) {
+                binding?.textLat?.visibility = View.VISIBLE
+                binding?.textLon?.visibility = View.VISIBLE
+            } else {
+                binding?.textLat?.visibility = View.GONE
+                binding?.textLon?.visibility = View.GONE
+            }
         }
     }
 
@@ -83,6 +114,12 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
 
         binding?.btnSwitchEnableLogo?.isChecked
             ?.let { featureViewModel.setEnableLogo(it) }
+
+        binding?.btnSwitchVerifiedText?.isChecked
+            ?.let { featureViewModel.setEnableVerifiedText(it) }
+
+        binding?.btnSwitchGoogleMap?.isChecked
+            ?.let { featureViewModel.setEnableImageGoogleMap(it) }
         dismiss()
     }
 

@@ -15,7 +15,8 @@ fun parseUserConfig(jsonString: String): UserConfig {
         users.add(
             User(
                 userId = obj.getString("user_id"),
-                activeKey = obj.getString("active_key")
+                activeKey = obj.getString("active_key"),
+                dueDate = obj.getString("due_date")
             )
         )
     }

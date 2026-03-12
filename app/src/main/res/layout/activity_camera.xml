@@ -18,7 +18,15 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:background="#A82828" />
 
-    <!-- Overlay: watermark / text / frame -->
+    <View
+        android:id="@+id/flashView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#FFFFFF"
+        android:alpha="0"
+        app:layout_constraintTop_toTopOf="@+id/previewView"
+        app:layout_constraintBottom_toBottomOf="@+id/previewView"
+        android:visibility="visible" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottomBar"
@@ -56,5 +64,18 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <ImageView
+        android:id="@+id/iconBack"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="10dp"
+        android:src="@drawable/ic_back"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="60dp"
+        android:background="@drawable/bg_icon_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

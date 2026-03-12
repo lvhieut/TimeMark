@@ -1,8 +1,8 @@
 package com.example.timemarkbase.utils
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
@@ -10,14 +10,28 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.text.TextPaint
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
-import androidx.fragment.app.Fragment
+import android.widget.ImageView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 fun View.slideAnimation(
     direction: SlideDirection,
@@ -281,4 +295,128 @@ fun drawVerifiedText(
     canvas.drawText(" Timemark Verified", labelX, iconY, textPaintLabel)
 
     canvas.restore()
+}
+
+fun ImageView.loadStaticMap(
+    lat: Double,
+    lng: Double,
+    apiKey: String,
+    zoom: Int = 15,
+    width: Int = 600,
+    height: Int = 400
+) {
+
+    val url = "https://maps.googleapis.com/maps/api/staticmap" +
+            "?center=$lat,$lng" +
+            "&zoom=$zoom" +
+            "&size=${width}x$height" +
+            "&scale=2" +
+            "&markers=color:red%7C$lat,$lng" +
+            "&key=$apiKey"
+
+    Glide.with(this.context)
+        .load(url)
+        .listener(object : RequestListener<Drawable> {
+
+            override fun onLoadFailed(
+                e: GlideException?,
+                model: Any?,
+                target: Target<Drawable>,
+                isFirstResource: Boolean
+            ): Boolean {
+                Log.e("StaticMap", "Load map failed + $e + ${url}")
+                e?.logRootCauses("StaticMap")
+
+                return false
+            }
+
+            override fun onResourceReady(
+                resource: Drawable,
+                model: Any,
+                target: Target<Drawable>?,
+                dataSource: DataSource,
+                isFirstResource: Boolean
+            ): Boolean {
+
+                Log.d("StaticMap", "Map loaded successfully")
+                return false
+            }
+        })
+        .into(this)
+}
+
+fun ImageView.loadMapSnapshot(
+    context: Context,
+    lat: Double,
+    lon: Double
+) {
+
+    Configuration.getInstance().load(
+        context,
+        context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE)
+    )
+
+    val mapView = MapView(context)
+
+    val geoPoint = GeoPoint(lat, lon)
+
+    mapView.setTileSource(TileSourceFactory.MAPNIK)
+    mapView.setMultiTouchControls(false)
+
+    mapView.layoutParams = android.view.ViewGroup.LayoutParams(
+        this.width.takeIf { it > 0 } ?: 600,
+        this.height.takeIf { it > 0 } ?: 400
+    )
+
+    val controller = mapView.controller
+    controller.setZoom(18.0)
+    controller.setCenter(geoPoint)
+
+    val marker = Marker(mapView)
+    marker.position = geoPoint
+    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+
+    mapView.overlays.add(marker)
+
+    mapView.measure(
+        android.view.View.MeasureSpec.makeMeasureSpec(mapView.layoutParams.width, android.view.View.MeasureSpec.EXACTLY),
+        android.view.View.MeasureSpec.makeMeasureSpec(mapView.layoutParams.height, android.view.View.MeasureSpec.EXACTLY)
+    )
+
+    mapView.layout(0, 0, mapView.measuredWidth, mapView.measuredHeight)
+
+    mapView.invalidate()
+
+    Handler(Looper.getMainLooper()).postDelayed({
+
+        val bitmap = Bitmap.createBitmap(
+            mapView.measuredWidth,
+            mapView.measuredHeight,
+            Bitmap.Config.ARGB_8888
+        )
+
+        val canvas = Canvas(bitmap)
+
+        mapView.draw(canvas)
+
+        this.setImageBitmap(bitmap)
+
+    }, 1200)
+}
+
+fun ImageView.loadLocationMap(
+    lat: Double,
+    lon: Double
+) {
+
+    val url = "https://staticmap.openstreetmap.de/staticmap.php" +
+            "?center=$lat,$lon" +
+            "&zoom=18" +
+            "&size=600x300" +
+            "&markers=$lat,$lon"
+    Log.d("TAG::", "loadLocationMap: $url")
+
+    Glide.with(this.context)
+        .load(url)
+        .into(this)
 }

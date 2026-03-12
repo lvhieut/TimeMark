@@ -7,7 +7,11 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
@@ -15,6 +19,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.provider.MediaStore
+import android.text.TextPaint
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -24,14 +30,21 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.example.timemarkbase.BottomSheetFragment
+import com.example.timemarkbase.BuildConfig
 import com.example.timemarkbase.R
 import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
 import com.example.timemarkbase.utils.SelectMode
+import com.example.timemarkbase.utils.loadLocationMap
+import com.example.timemarkbase.utils.loadMapSnapshot
+import com.example.timemarkbase.utils.loadStaticMap
 import com.example.timemarkbase.view_model.MainFeatureViewModel
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -56,8 +69,28 @@ class MainFeature : AppCompatActivity() {
                     Glide.with(it1.context)
                         .load(it)
                         .dontTransform()
-                        .into(it1)
+                        .into(object : CustomTarget<Drawable>() {
+                            override fun onResourceReady(
+                                resource: Drawable,
+                                transition: Transition<in Drawable>?
+                            ) {
+                                it1.setImageDrawable(resource)
+                                it1.post {
+                                    val bitmap = (binding?.imgPreview?.drawable?.toBitmap()
+                                        ?: return@post)
+                                    originalBitmap?.let {
+                                        if (!it.isRecycled) it.recycle()
+                                    }
+                                    originalBitmap = bitmap
+                                    currentVerifiedCode = generateSecureCode()
 
+                                    updateWatermark()
+                                }
+                            }
+
+                            override fun onLoadCleared(placeholder: Drawable?) {}
+
+                        })
                 }
             }
         }
@@ -80,11 +113,21 @@ class MainFeature : AppCompatActivity() {
 
     private val secureRandom = SecureRandom()
 
+    private var originalBitmap: Bitmap? = null
+    private var currentVerifiedCode = ""
+    private var currentLat: Double = 0.0
+    private var currentLon: Double = 0.0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainFeatureBinding.inflate(layoutInflater)
         enableEdgeToEdge()
         setContentView(binding?.root)
+        //setting default value
+        featureViewModel.setEnableFullName(true)
+        featureViewModel.setEnableLogo(false)
+        featureViewModel.setEnableVerifiedText(true)
+        featureViewModel.setEnableImageGoogleMap(false)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -102,14 +145,38 @@ class MainFeature : AppCompatActivity() {
         photoPath?.let {
             Glide.with(this)
                 .load(it)
-                .into(binding?.imgPreview!!)
+                .into(object : CustomTarget<Drawable>() {
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        transition: Transition<in Drawable>?
+                    ) {
+                        binding?.imgPreview?.setImageDrawable(resource)
+                        binding?.imgPreview?.post {
+                            val bitmap = (binding?.imgPreview?.drawable?.toBitmap()
+                                ?: return@post)
+                            originalBitmap?.let {
+                                if (!it.isRecycled) it.recycle()
+                            }
+
+                            originalBitmap = bitmap
+                            currentVerifiedCode = generateSecureCode()
+
+                            updateWatermark()
+                        }
+                    }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                    }
+
+                })
         }
 
         binding?.commonToolbarWrapper?.btnChooseImageView?.setOnClickListener {
             openGallery(SelectMode.SELECT_IMAGE.toString())
         }
 
-        binding?.timeMarkView?.root?.setOnClickListener {
+        binding?.commonToolbarWrapper?.btnEditInformation?.setOnClickListener {
+            BottomSheetFragment().show(supportFragmentManager, null)
             featureViewModel.setFullName(binding?.timeMarkView?.txtNameUser?.text.toString())
             featureViewModel.setDay(binding?.timeMarkView?.txtDay?.text.toString())
             featureViewModel.setAddress(binding?.timeMarkView?.txtAddress?.text.toString())
@@ -117,15 +184,15 @@ class MainFeature : AppCompatActivity() {
                 featureViewModel.setTime(timeView.getTime())
             }
             featureViewModel.setDate(binding?.timeMarkView?.txtDateFormater?.text.toString())
-            featureViewModel.setEnableFullName(true)
-            featureViewModel.setEnableLogo(true)
-            BottomSheetFragment().show(supportFragmentManager, null)
         }
 
         binding?.commonToolbarWrapper?.btnSaveImage?.setOnClickListener {
             binding?.csLayoutMainContent?.let { csLayoutMainContent ->
-                captureImageViewAndSave(this@MainFeature,
-                    csLayoutMainContent
+                val root = binding?.csLayoutMainContent ?: return@setOnClickListener
+                val imageView = binding?.imgPreview ?: return@setOnClickListener
+                captureAndCrop(
+                    root,
+                    imageView
                 )
             }
         }
@@ -138,10 +205,50 @@ class MainFeature : AppCompatActivity() {
             openGallery(SelectMode.SELECT_LOGO.toString())
         }
 
-
-        binding?.textEncrypt?.text = generateSecureCode()
+        binding?.textEncrypt?.apply {
+            text = generateSecureCode()
+            typeface = android.graphics.Typeface.SANS_SERIF
+        }
     }
 
+    private fun captureAndCrop(rootView: View, targetView: View) {
+        // 1. Capture toàn layout
+        val fullBitmap = Bitmap.createBitmap(
+            rootView.width,
+            rootView.height,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(fullBitmap)
+        rootView.draw(canvas)
+
+        // 2. Lấy vị trí ImageView trong layout
+        val location = IntArray(2)
+        targetView.getLocationInWindow(location)
+
+        val rootLocation = IntArray(2)
+        rootView.getLocationInWindow(rootLocation)
+
+        val left = location[0] - rootLocation[0]
+        val top = location[1] - rootLocation[1]
+        val width = targetView.width
+        val height = targetView.height
+
+        // 3. Crop đúng vùng ảnh
+        val croppedBitmap = Bitmap.createBitmap(
+            fullBitmap,
+            left,
+            top,
+            width,
+            height
+        )
+
+        // 4. Save bitmap đã crop
+        captureImageViewAndSave(this, croppedBitmap)
+
+        fullBitmap.recycle()
+    }
+
+    @SuppressLint("SetTextI18n")
     private fun initObserve() {
         featureViewModel.time.observe(this) {
             binding?.timeMarkView?.txtTime?.setTime(it)
@@ -159,6 +266,11 @@ class MainFeature : AppCompatActivity() {
             binding?.timeMarkView?.txtAddress?.text = it
         }
 
+        featureViewModel.latLon.observe(this) { latLon ->
+            binding?.timeMarkView?.txtLatAndLon?.text = "Toạ độ: %.5f, %.5f".format(latLon.first, latLon.second)
+//            binding?.imgMapGg?.loadStaticMap(latLon.first, latLon.second, BuildConfig.API_KEY)
+        }
+
         featureViewModel.fullName.observe(this) {
             binding?.timeMarkView?.txtNameUser?.text = it
         }
@@ -169,6 +281,15 @@ class MainFeature : AppCompatActivity() {
 
         featureViewModel.isEnableLogo.observe(this) {
             binding?.imgLogoCompany?.isVisible = it
+        }
+
+        featureViewModel.isEnableVerifiedText.observe(this) { isShow ->
+            updateWatermark()
+        }
+
+        featureViewModel.isEnableGoogleMap.observe(this) {
+            binding?.imgMapGg?.isVisible = it
+            binding?.timeMarkView?.txtLatAndLon?.isVisible = it
         }
     }
 
@@ -224,7 +345,7 @@ class MainFeature : AppCompatActivity() {
     }
 
     private fun openGallery(from: String) {
-        when(from) {
+        when (from) {
             SelectMode.SELECT_IMAGE.toString() -> {
                 pickMediaLauncher.launch(
                     PickVisualMediaRequest(
@@ -232,6 +353,7 @@ class MainFeature : AppCompatActivity() {
                     )
                 )
             }
+
             SelectMode.SELECT_LOGO.toString() -> {
                 pickMediaLogoLauncher.launch(
                     PickVisualMediaRequest(
@@ -247,6 +369,20 @@ class MainFeature : AppCompatActivity() {
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         val formattedTime = timeFormatter.format(currentDate)
         binding?.timeMarkView?.txtTime?.setTime(formattedTime)
+    }
+
+    private fun updateWatermark() {
+        val bitmap = originalBitmap ?: return
+        val isShow = featureViewModel.isEnableVerifiedText.value ?: false
+
+        val finalBitmap = addVerifiedWatermarkToBitmapV5(
+            application,
+            bitmap,
+            currentVerifiedCode,
+            isShow
+        )
+
+        binding?.imgPreview?.setImageBitmap(finalBitmap)
     }
 
     fun getCurrentAddress(
@@ -267,6 +403,10 @@ class MainFeature : AppCompatActivity() {
                 onResult(null)
                 return@getCurrentLocation
             }
+
+            currentLat = location.latitude
+            currentLon = location.longitude
+            featureViewModel.setLatLon(currentLat, currentLon)
 
             CoroutineScope(Dispatchers.IO).launch {
                 try {
@@ -341,22 +481,9 @@ class MainFeature : AppCompatActivity() {
 
     private fun captureImageViewAndSave(
         activity: Activity,
-        view: View,
+        bitmap: Bitmap,
         fileName: String = "timemark_capture_${System.currentTimeMillis()}.jpg"
     ) {
-        if (view.width == 0 || view.height == 0) {
-            view.post { captureImageViewAndSave(activity, view, fileName) }
-            return
-        }
-
-        val bitmap = Bitmap.createBitmap(
-            view.width,
-            view.height,
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = android.graphics.Canvas(bitmap)
-        view.draw(canvas)
-
         val contentValues = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
@@ -370,8 +497,7 @@ class MainFeature : AppCompatActivity() {
         val imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
 
         imageUri?.let { uri ->
-            val outputStream = resolver.openOutputStream(uri)
-            outputStream.use { output ->
+            resolver.openOutputStream(uri).use { output ->
                 if (output != null) {
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 95, output)
                 }
@@ -403,4 +529,99 @@ class MainFeature : AppCompatActivity() {
 
         toast.show()
     }
+
+    fun addVerifiedWatermarkToBitmapV5(
+        context: Context,
+        original: Bitmap,
+        verifiedId: String,
+        isShowVerified: Boolean
+    ): Bitmap {
+
+        if (!isShowVerified) {
+            return original
+        }
+
+        val result = original.copy(Bitmap.Config.ARGB_8888, true)
+        val canvas = Canvas(result)
+        val density = context.resources.displayMetrics.density
+        val width = result.width.toFloat()
+        val height = result.height.toFloat()
+
+        val paintId = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#EEEEEE")
+            textSize = width * 0.024f
+            typeface = Typeface.SANS_SERIF
+            letterSpacing = 0.01f
+            setShadowLayer(
+                0.0015f * width * 0.4f,
+                0.3f,
+                0.3f,
+                Color.parseColor("#50000000")
+            )
+        }
+
+        val paintText = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#EEEEEE")
+            textSize = width * 0.023f
+            typeface = Typeface.SANS_SERIF
+            letterSpacing = 0.03f
+            setShadowLayer(
+                0.0015f * width * 0.4f,
+                0.3f,
+                0.3f,
+                Color.parseColor("#50000000")
+            )
+        }
+        //16f
+
+        val iconSize = (width * 0.02f).toInt()   // scale theo ảnh
+        val iconDrawable = context.getDrawable(R.drawable.icon_verified)!!
+        val iconBitmap = Bitmap.createScaledBitmap(
+            iconDrawable.toBitmap(),
+            iconSize,
+            iconSize,
+            true
+        )
+
+//        val iconSize = (16f * density).toInt()
+//        val iconDrawable = context.getDrawable(R.drawable.icon_verified)!!
+//        val iconBitmap = iconDrawable.toBitmap(iconSize, iconSize)
+
+        //val spacing = 4f * density
+        val spacing = width * 0.006f
+        val verifiedText = "Timemark Verified"
+
+        val totalWidth = iconSize +
+                spacing +
+                paintId.measureText(verifiedId) +
+                spacing +
+                paintText.measureText(verifiedText)
+
+        //14f
+//        val paddingRight = 10f * density
+        val paddingRight = width * 0.02f
+        val translateX = width - paddingRight
+        val translateY = height / 2f
+
+        canvas.save()
+        canvas.translate(translateX, translateY)
+        canvas.rotate(-90f)
+        canvas.translate(-totalWidth / 2f, 0f)
+
+        canvas.drawBitmap(iconBitmap, 0f, -iconSize / 2f, null)
+
+        val textIdX = iconSize + spacing
+        val textIdY = -(paintId.descent() + paintId.ascent()) / 2
+        canvas.drawText(verifiedId, textIdX, textIdY, paintId)
+
+        val textVerifiedX =
+            textIdX + paintId.measureText(verifiedId) + spacing
+        val textVerifiedY =
+            -(paintText.descent() + paintText.ascent()) / 2
+        canvas.drawText(verifiedText, textVerifiedX, textVerifiedY, paintText)
+
+        canvas.restore()
+        return result
+    }
+
 }
