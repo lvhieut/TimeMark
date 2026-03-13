@@ -24,6 +24,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.provider.MediaStore
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.TextPaint
 import android.util.Log
 import android.view.View
@@ -35,6 +37,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.ViewCompat
@@ -47,6 +50,7 @@ import com.example.timemarkbase.BottomSheetFragment
 import com.example.timemarkbase.R
 import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
 import com.example.timemarkbase.utils.CompassManager
+import com.example.timemarkbase.utils.CustomTypefaceSpan
 import com.example.timemarkbase.utils.SelectMode
 import com.example.timemarkbase.view_model.MainFeatureViewModel
 import com.google.android.gms.location.LocationCallback
@@ -88,9 +92,21 @@ class MainFeature : AppCompatActivity(), SensorEventListener {
                                     currentVerifiedCode = generateSecureCode()
 
                                     val formattedCode = getString(R.string.image_verified_code, currentVerifiedCode)
-                                    binding?.timeMarkView?.txtImageVerified?.text = formattedCode
+                                    val spannable = SpannableString(formattedCode)
+                                    val start = formattedCode.indexOf(currentVerifiedCode)
+                                    val end = start + currentVerifiedCode.length
+                                    val typeface1 = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                                    val typeface = ResourcesCompat.getFont(this@MainFeature, R.font.be_bas_dakar_font) ?: typeface1
+                                    spannable.setSpan(
+                                        CustomTypefaceSpan(typeface),
+                                        start,
+                                        end,
+                                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                    )
+                                    binding?.timeMarkView?.txtImageVerified?.text = spannable
 
                                     updateWatermark()
+                                    applyCommonFont()
                                 }
                             }
 
@@ -126,7 +142,7 @@ class MainFeature : AppCompatActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private var rotationSensor: Sensor? = null
     private val commonTypeface: Typeface by lazy {
-        Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        Typeface.create("sans-serif-condensed", Typeface.NORMAL)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -145,7 +161,6 @@ class MainFeature : AppCompatActivity(), SensorEventListener {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        applyCommonFont()
         initObserve()
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
@@ -173,9 +188,21 @@ class MainFeature : AppCompatActivity(), SensorEventListener {
                             originalBitmap = bitmap
                             currentVerifiedCode = generateSecureCode()
                             val formattedCode = getString(R.string.image_verified_code, currentVerifiedCode)
-                            binding?.timeMarkView?.txtImageVerified?.text = formattedCode
+                            val spannable = SpannableString(formattedCode)
+                            val start = formattedCode.indexOf(currentVerifiedCode)
+                            val end = start + currentVerifiedCode.length
+                            val typeface1 = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                            val typeface = ResourcesCompat.getFont(this@MainFeature, R.font.be_bas_dakar_font) ?: typeface1
+                            spannable.setSpan(
+                                CustomTypefaceSpan(typeface),
+                                start,
+                                end,
+                                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                            )
+                            binding?.timeMarkView?.txtImageVerified?.text = spannable
 
                             updateWatermark()
+                            applyCommonFont()
                         }
                     }
 
@@ -268,6 +295,7 @@ class MainFeature : AppCompatActivity(), SensorEventListener {
 
         featureViewModel.isEnableVerifiedText.observe(this) {
             binding?.timeMarkView?.txtImageVerified?.isVisible = it
+            binding?.timeMarkView?.viewLine?.isVisible = it
         }
 
         featureViewModel.day.observe(this) {
@@ -364,7 +392,8 @@ class MainFeature : AppCompatActivity(), SensorEventListener {
         val formatter = SimpleDateFormat(patternDate, Locale("vi"))
         val dayFormatter = SimpleDateFormat(patternDay, Locale("vi"))
         val formattedDate = formatter.format(currentDate)
-        val formattedDay = dayFormatter.format(currentDate)
+        var formattedDay = dayFormatter.format(currentDate)
+        formattedDay = formattedDay.split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
         binding?.timeMarkView?.txtDateFormater?.text = formattedDate
         binding?.timeMarkView?.txtDay?.text = formattedDay
     }
@@ -725,36 +754,6 @@ class MainFeature : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    fun calculateFinalBearing(
-        currentLoc: Location,
-        destLoc: Location,
-        azimuth: Float
-    ): Float {
-        // 1. Tính toán Declination (Độ lệch từ trường)
-        val geoField = GeomagneticField(
-            currentLoc.latitude.toFloat(),
-            currentLoc.longitude.toFloat(),
-            currentLoc.altitude.toFloat(),
-            System.currentTimeMillis()
-        )
-        val declination = geoField.declination
-
-        // 2. Điều chỉnh azimuth từ Magnetic North sang True North
-        // Sensor trả về âm nếu lệch trái, dương nếu lệch phải
-        val trueHeading = azimuth + declination
-
-        // 3. Tính bearing từ mình đến đích (độ Đông của True North)
-        val bearingToDest = currentLoc.bearingTo(destLoc)
-
-        // 4. Tính góc quay tương đối của mũi tên
-        // Công thức: Góc cần quay = (Góc tới đích) - (Hướng máy đang nhìn)
-        var finalRotation = bearingToDest - trueHeading
-
-        finalRotation = (finalRotation + 360) % 360
-
-        return finalRotation
-    }
-
     private fun applyCommonFont() {
         val textViews = listOf(
             binding?.timeMarkView?.txtTime,
@@ -765,7 +764,11 @@ class MainFeature : AppCompatActivity(), SensorEventListener {
             binding?.timeMarkView?.txtImageVerified
         )
 
-        textViews.forEach { it?.typeface = commonTypeface }
+        textViews.forEach {
+            it?.typeface = commonTypeface
+            it?.letterSpacing = 0.02f
+            it?.setShadowLayer(3.5f, 0.6f, 0.6f, Color.parseColor("#90000000"));
+        }
     }
 
 }

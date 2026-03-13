@@ -52,7 +52,7 @@
                 tools:textColor="@color/black"
                 android:text="@string/text_day_demo"
                 android:textColor="#FFFFFF"
-                android:textSize="@dimen/dimen_13sp"
+                android:textSize="@dimen/dimen_13.5sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -63,7 +63,7 @@
                 android:text="22:56"
                 android:layout_marginStart="4dp"
                 android:textColor="@color/white"
-                android:textSize="@dimen/dimen_13sp"
+                android:textSize="@dimen/dimen_13.5sp"
                 tools:textColor="@color/black"
                 app:layout_constraintBottom_toBottomOf="@+id/txtDateFormater"
                 app:layout_constraintStart_toEndOf="@+id/txtDateFormater"
@@ -77,7 +77,7 @@
                 android:layout_weight="1"
                 android:text="@string/text_time_formater"
                 android:textColor="#FFFFFF"
-                android:textSize="@dimen/dimen_13sp"
+                android:textSize="@dimen/dimen_13.5sp"
                 android:layout_marginStart="4dp"
                 app:layout_constraintBottom_toBottomOf="@+id/txtDay"
                 app:layout_constraintStart_toEndOf="@+id/txtDay"
@@ -96,7 +96,7 @@
                 tools:textColor="@color/black"
                 android:text="@string/text_address"
                 android:textColor="#FFFFFF"
-                android:textSize="@dimen/dimen_13sp"
+                android:textSize="@dimen/dimen_13.5sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/txtDay"
                 app:layout_constraintStart_toStartOf="parent" />
@@ -116,29 +116,39 @@
         android:paddingStart="6dp"
         android:text="@string/name_fake"
         android:textColor="@color/white"
-        android:textSize="@dimen/dimen_13sp"
+        android:textSize="@dimen/dimen_13.5sp"
         android:layout_marginTop="4dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/csLayout1" />
+    
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="0dp"
+        android:layout_height="0.5dp"
+        android:background="#C9E4DFDF"
+        android:layout_marginStart="6dp"
+        android:layout_marginVertical="4dp"
+        app:layout_constraintTop_toBottomOf="@+id/txtNameUser"
+        app:layout_constraintStart_toStartOf="@+id/txtImageVerified"
+        app:layout_constraintEnd_toEndOf="@+id/txtImageVerified" />
 
     <TextView
         android:id="@+id/txtImageVerified"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:background="@drawable/bg_custom_text_view"
         android:drawableStart="@drawable/icon_verified_v2"
-        android:drawablePadding="8dp"
+        android:drawablePadding="6dp"
         android:maxLines="1"
         android:padding="1dp"
         android:paddingStart="6dp"
+        android:fontFamily="@font/be_bas_dakar_font"
         android:text="@string/verified_image_fake"
         android:textColor="#D9E4DFDF"
-        android:textSize="@dimen/dimen_13sp"
+        android:textSize="@dimen/dimen_13.5sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtNameUser"
+        app:layout_constraintTop_toBottomOf="@+id/viewLine"
         tools:textColor="@color/black" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

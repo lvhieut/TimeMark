@@ -2,8 +2,8 @@
     <string name="app_name">TimeMark Pro</string>
     <string name="app_title">TimeMark Pro</string>
     <string name="text_time_formater">d \'Tháng\' M, yyyy</string>
-    <string name="text_time_formater_v2">d/M/yyyy</string>
-    <string name="text_day_demo">EEEE</string>
+    <string name="text_time_formater_v2">dd/MM/yyyy</string>
+    <string name="text_day_demo">EEEE,</string>
     <string name="text_address">Đang lấy địa chỉ…</string>
     <string name="text_time_content">Time</string>
     <string name="text_mark_content">mark</string>
