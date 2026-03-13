@@ -34,6 +34,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -42,9 +43,6 @@ import com.example.timemarkbase.BuildConfig
 import com.example.timemarkbase.R
 import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
 import com.example.timemarkbase.utils.SelectMode
-import com.example.timemarkbase.utils.loadLocationMap
-import com.example.timemarkbase.utils.loadMapSnapshot
-import com.example.timemarkbase.utils.loadStaticMap
 import com.example.timemarkbase.view_model.MainFeatureViewModel
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -268,7 +266,15 @@ class MainFeature : AppCompatActivity() {
 
         featureViewModel.latLon.observe(this) { latLon ->
             binding?.timeMarkView?.txtLatAndLon?.text = "Toạ độ: %.5f, %.5f".format(latLon.first, latLon.second)
-//            binding?.imgMapGg?.loadStaticMap(latLon.first, latLon.second, BuildConfig.API_KEY)
+            featureViewModel.isEnableGoogleMap.observe(this) { enable ->
+                if (enable) {
+                    Log.d("TAG::", "enable: $enable")
+//                    binding?.imgMapGg?.loadGoongStaticMap(
+//                        latLon.first,
+//                        latLon.second
+//                    )
+                }
+            }
         }
 
         featureViewModel.fullName.observe(this) {

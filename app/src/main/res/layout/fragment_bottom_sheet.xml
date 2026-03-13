@@ -105,7 +105,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:visibility="invisible"
             android:paddingStart="16dp"
             android:weightSum="1">
 

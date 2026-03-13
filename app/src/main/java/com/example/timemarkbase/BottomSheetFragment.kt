@@ -118,8 +118,8 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         binding?.btnSwitchVerifiedText?.isChecked
             ?.let { featureViewModel.setEnableVerifiedText(it) }
 
-        binding?.btnSwitchGoogleMap?.isChecked
-            ?.let { featureViewModel.setEnableImageGoogleMap(it) }
+//        binding?.btnSwitchGoogleMap?.isChecked
+//            ?.let { featureViewModel.setEnableImageGoogleMap(it) }
         dismiss()
     }
 

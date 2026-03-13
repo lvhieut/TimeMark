@@ -25,7 +25,12 @@ android {
         buildConfigField(
             "String",
             "API_KEY",
-            "\"AIzaSyDLkb82VOZNFs8QD5Kc1Bcnk5541Llnh60\""
+            "\"LXWqTKHum7SHGPuHgKwA9rE3YwQHioePQ4EBSyWm\""
+        )
+        buildConfigField(
+            "String",
+            "BASE_URL",
+            "\"https://rsapi.goong.io/staticmap\""
         )
     }
 

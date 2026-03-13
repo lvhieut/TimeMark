@@ -22,16 +22,21 @@ import android.view.WindowManager
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
 import android.widget.ImageView
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.example.timemarkbase.BuildConfig
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import kotlin.math.roundToInt
 
 fun View.slideAnimation(
     direction: SlideDirection,
@@ -297,6 +302,42 @@ fun drawVerifiedText(
     canvas.restore()
 }
 
+fun ImageView.loadGoongStaticMap(
+    lat: Double,
+    lng: Double,
+    zoom: Int = 16,
+    width: Int = 600,
+    height: Int = 300,
+    apiKey: String = BuildConfig.API_KEY
+) {
+
+    val lifecycleOwner = findViewTreeLifecycleOwner() ?: return
+
+    val latRound = roundCoord(lat)
+    val lngRound = roundCoord(lng)
+
+    lifecycleOwner.lifecycleScope.launch {
+
+        val bitmap = StaticMapManager.getStaticMap(
+            context = context,
+            lat = latRound,
+            lng = lngRound,
+            zoom = zoom,
+            width = width,
+            height = height,
+            apiKey = apiKey
+        )
+
+        bitmap?.let {
+            setImageBitmap(it)
+        }
+    }
+}
+
+private fun roundCoord(value: Double): Double {
+    return (value * 1000).roundToInt() / 1000.0
+}
+
 fun ImageView.loadStaticMap(
     lat: Double,
     lng: Double,
@@ -306,13 +347,13 @@ fun ImageView.loadStaticMap(
     height: Int = 400
 ) {
 
-    val url = "https://maps.googleapis.com/maps/api/staticmap" +
+    val url = "https://rsapi.goong.io/staticmap" +
             "?center=$lat,$lng" +
             "&zoom=$zoom" +
             "&size=${width}x$height" +
             "&scale=2" +
-            "&markers=color:red%7C$lat,$lng" +
-            "&key=$apiKey"
+            "&markers=$lat,$lng" +
+            "&api_key=$apiKey"
 
     Glide.with(this.context)
         .load(url)
