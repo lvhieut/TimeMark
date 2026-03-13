@@ -64,8 +64,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="-3dp"
-            android:layout_marginBottom="-4dp"
+            android:layout_marginStart="-8dp"
+            android:layout_marginBottom="-8dp"
             android:padding="1dp"
             app:layout_constraintBottom_toTopOf="@id/textTitle"
             app:layout_constraintStart_toStartOf="@id/textTitle">
@@ -77,19 +77,19 @@
                 android:fontFamily="@font/be_vietnam_pro"
                 android:text="@string/text_time_content"
                 android:textColor="#FFC107"
-                android:textSize="@dimen/dimen_14sp"
+                android:textSize="@dimen/dimen_13.5sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/textMark"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_width="37dp"
+                android:layout_height="25dp"
                 android:fontFamily="@font/be_vietnam_pro"
                 android:text="@string/text_mark_content"
                 android:textColor="#F2F2F2"
-                android:textSize="@dimen/dimen_14sp"
+                android:textSize="@dimen/dimen_13.5sp"
                 app:layout_constraintBottom_toBottomOf="@id/textTime"
                 app:layout_constraintStart_toEndOf="@+id/textTime"
                 app:layout_constraintTop_toTopOf="@+id/textTime"
@@ -106,7 +106,7 @@
             android:padding="1dp"
             android:text="@string/text_content"
             android:textColor="#B0B0B0"
-            android:textSize="@dimen/dimen_8sp"
+            android:textSize="7sp"
             app:layout_constraintBottom_toBottomOf="@id/imgPreview"
             app:layout_constraintEnd_toEndOf="@id/imgPreview" />
 
