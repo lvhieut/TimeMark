@@ -3,6 +3,7 @@ package com.example.timemarkbase.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import android.util.LruCache
 import com.example.timemarkbase.BuildConfig
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,7 @@ object StaticMapManager {
         }
 
         val bitmap = fetchFromNetwork(lat, lng, zoom, width, height, apiKey)
+        Log.d("TAG::", "getStaticMap: $bitmap")
 
         bitmap?.let {
             memoryCache.put(cacheKey, it)
@@ -64,7 +66,7 @@ object StaticMapManager {
                 "&size=${width}x$height" +
                 "&markers=$lat,$lng" +
                 "&api_key=$apiKey"
-
+        Log.d("TAG::", "url: $url")
         try {
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.connect()
@@ -73,6 +75,7 @@ object StaticMapManager {
             BitmapFactory.decodeStream(input)
 
         } catch (e: Exception) {
+            Log.d("TAG::", "$e")
             e.printStackTrace()
             null
         }

@@ -43,6 +43,7 @@ import com.example.timemarkbase.BuildConfig
 import com.example.timemarkbase.R
 import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
 import com.example.timemarkbase.utils.SelectMode
+import com.example.timemarkbase.utils.loadGoongStaticMap
 import com.example.timemarkbase.view_model.MainFeatureViewModel
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -269,10 +270,10 @@ class MainFeature : AppCompatActivity() {
             featureViewModel.isEnableGoogleMap.observe(this) { enable ->
                 if (enable) {
                     Log.d("TAG::", "enable: $enable")
-//                    binding?.imgMapGg?.loadGoongStaticMap(
-//                        latLon.first,
-//                        latLon.second
-//                    )
+                    binding?.imgMapGg?.loadGoongStaticMap(
+                        latLon.first,
+                        latLon.second
+                    )
                 }
             }
         }
