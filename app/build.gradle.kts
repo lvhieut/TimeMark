@@ -30,7 +30,7 @@ android {
         buildConfigField(
             "String",
             "BASE_URL",
-            "\"https://rsapi.goong.io/staticmap\""
+            "\"https://rsapi.goong.io/staticmap/route\""
         )
     }
 

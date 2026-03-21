@@ -410,7 +410,7 @@ class MainFeature : AppCompatActivity() {
                 onResult(null)
                 return@getCurrentLocation
             }
-
+            Log.d("TAG::", "location: $location")
             currentLat = location.latitude
             currentLon = location.longitude
             featureViewModel.setLatLon(currentLat, currentLon)
@@ -423,6 +423,7 @@ class MainFeature : AppCompatActivity() {
                         location.longitude,
                         1
                     )
+                    Log.d("TAG::", "getCurrentAddress: $list")
                     val address = list?.firstOrNull()?.getAddressLine(0)
 
                     withContext(Dispatchers.Main) {

@@ -12,6 +12,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Locale
 
 object StaticMapManager {
 
@@ -61,14 +62,14 @@ object StaticMapManager {
     ): Bitmap? = withContext(Dispatchers.IO) {
 
         val url = BuildConfig.BASE_URL +
-                "?center=$lat,$lng" +
-                "&zoom=$zoom" +
-                "&size=${width}x$height" +
-                "&markers=$lat,$lng" +
+                "?origin=${String.format(Locale.US, "%.6f,%.6f", lat, lng)}" +
+                "&destination=${String.format(Locale.US, "%.6f,%.6f", lat, lng)}" +
+                "&vehical=car"
                 "&api_key=$apiKey"
         Log.d("TAG::", "url: $url")
         try {
             val connection = URL(url).openConnection() as HttpURLConnection
+            Log.d("TAG::", "connection: ${connection.responseCode}")
             connection.connect()
 
             val input = connection.inputStream
