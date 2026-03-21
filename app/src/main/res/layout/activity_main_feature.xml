@@ -46,11 +46,14 @@
         <ImageView
             android:id="@+id/imgLogoCompany"
             android:layout_width="60dp"
-            android:layout_height="80dp"
-            android:layout_marginStart="4dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="8dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
             android:background="@color/black"
+            app:layout_constraintWidth_percent="0.4"
             app:layout_constraintBottom_toTopOf="@+id/timeMarkView"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="@+id/timeMarkView" />
 
         <include
             android:id="@+id/timeMarkView"
@@ -101,65 +104,14 @@
             android:id="@+id/textTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp"
+            android:layout_margin="8dp"
             android:fontFamily="@font/be_vietnam_pro"
             android:padding="1dp"
             android:text="@string/text_content"
             android:textColor="#B0B0B0"
-            android:textSize="@dimen/dimen_8sp"
+            android:textSize="9sp"
             app:layout_constraintBottom_toBottomOf="@id/imgPreview"
             app:layout_constraintEnd_toEndOf="@id/imgPreview" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/llEncrypt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/imgPreview"
-            app:layout_constraintEnd_toEndOf="@id/imgPreview"
-            app:layout_constraintTop_toTopOf="@id/imgPreview">
-
-            <ImageView
-                android:id="@+id/icon_verified"
-                android:layout_width="8dp"
-                android:layout_height="10dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/icon_verified"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/textEncrypt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:fontFamily="@font/rajdhani_regular"
-                android:shadowColor="#50000000"
-                android:text="@string/cotent_m5c3k8qarjx83l"
-                android:textColor="#EEEEEE"
-                android:textSize="11sp"
-                app:layout_constraintStart_toEndOf="@+id/icon_verified"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                tools:textColor="#EEEEEE" />
-
-            <TextView
-                android:id="@+id/textVerified"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="2dp"
-                android:fontFamily="@font/rajdhani_regular"
-                android:shadowColor="#50000000"
-                android:text="@string/text_timemark_verified"
-                android:textColor="#EEEEEE"
-                android:textSize="11sp"
-                app:layout_constraintBottom_toBottomOf="@id/textEncrypt"
-                app:layout_constraintStart_toEndOf="@+id/textEncrypt"
-                app:layout_constraintTop_toTopOf="@+id/textEncrypt" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

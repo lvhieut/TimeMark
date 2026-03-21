@@ -24,6 +24,7 @@ import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,12 +36,15 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.example.timemarkbase.BottomSheetFragment
 import com.example.timemarkbase.BuildConfig
 import com.example.timemarkbase.R
 import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
+import com.example.timemarkbase.utils.PrefHelper
+import com.example.timemarkbase.utils.RemoveBlackBgTransformation
 import com.example.timemarkbase.utils.SelectMode
 import com.example.timemarkbase.utils.loadLocationMap
 import com.example.timemarkbase.utils.loadMapSnapshot
@@ -85,6 +89,7 @@ class MainFeature : AppCompatActivity() {
                                     currentVerifiedCode = generateSecureCode()
 
                                     updateWatermark()
+                                    applyCommonFont()
                                 }
                             }
 
@@ -99,11 +104,15 @@ class MainFeature : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
             uri?.let {
                 binding?.imgLogoCompany?.let { img ->
+                    img.setBackgroundColor(Color.TRANSPARENT)
                     Glide.with(img.context)
+                        .asBitmap()
                         .load(it)
-                        .dontTransform()
+                        .transform(
+                            RemoveBlackBgTransformation(),
+                            RoundedCorners(20)
+                        )
                         .into(img)
-
                 }
             }
         }
@@ -117,6 +126,9 @@ class MainFeature : AppCompatActivity() {
     private var currentVerifiedCode = ""
     private var currentLat: Double = 0.0
     private var currentLon: Double = 0.0
+    private val commonTypeface: Typeface by lazy {
+        Typeface.create("sans-serif-condensed", Typeface.NORMAL)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,17 +141,31 @@ class MainFeature : AppCompatActivity() {
         featureViewModel.setEnableVerifiedText(true)
         featureViewModel.setEnableImageGoogleMap(false)
 
+        // Padding system bars
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
+        val name = PrefHelper.getName(this)
+        val address = PrefHelper.getAddress(this)
+
+        if (name.isNotEmpty()) {
+            binding?.timeMarkView?.txtNameUser?.text = name
+        }
+
+        if (address.isEmpty()) {
+            checkLocationPermissionAndGetAddress()
+        } else {
+            binding?.timeMarkView?.txtAddress?.text = address
+        }
+
         initObserve()
 
         getDateFormater()
         getTimeFormatter()
-        checkLocationPermissionAndGetAddress()
+        //check second time
 
         val photoPath = intent.getStringExtra("photo_path")
         photoPath?.let {
@@ -162,6 +188,7 @@ class MainFeature : AppCompatActivity() {
                             currentVerifiedCode = generateSecureCode()
 
                             updateWatermark()
+                            applyCommonFont()
                         }
                     }
 
@@ -177,6 +204,12 @@ class MainFeature : AppCompatActivity() {
 
         binding?.commonToolbarWrapper?.btnEditInformation?.setOnClickListener {
             BottomSheetFragment().show(supportFragmentManager, null)
+            val nameUser = binding?.timeMarkView?.txtNameUser?.text.toString()
+            val addressDetail = binding?.timeMarkView?.txtAddress?.text.toString()
+
+            // save lại
+            PrefHelper.saveName(this, nameUser)
+            PrefHelper.saveAddress(this, addressDetail)
             featureViewModel.setFullName(binding?.timeMarkView?.txtNameUser?.text.toString())
             featureViewModel.setDay(binding?.timeMarkView?.txtDay?.text.toString())
             featureViewModel.setAddress(binding?.timeMarkView?.txtAddress?.text.toString())
@@ -198,6 +231,22 @@ class MainFeature : AppCompatActivity() {
         }
 
         binding?.commonToolbarWrapper?.iconBack?.setOnClickListener {
+            val nameUser = binding?.timeMarkView?.txtNameUser?.text.toString()
+            val addressDetail = binding?.timeMarkView?.txtAddress?.text.toString()
+
+            // save lại
+            PrefHelper.saveName(this, nameUser)
+            PrefHelper.saveAddress(this, addressDetail)
+            finish()
+        }
+
+        onBackPressedDispatcher.addCallback(this) {
+            val nameUser = binding?.timeMarkView?.txtNameUser?.text.toString()
+            val addressDetail = binding?.timeMarkView?.txtAddress?.text.toString()
+
+            // save lại
+            PrefHelper.saveName(this@MainFeature, nameUser)
+            PrefHelper.saveAddress(this@MainFeature, addressDetail)
             finish()
         }
 
@@ -205,10 +254,10 @@ class MainFeature : AppCompatActivity() {
             openGallery(SelectMode.SELECT_LOGO.toString())
         }
 
-        binding?.textEncrypt?.apply {
-            text = generateSecureCode()
-            typeface = android.graphics.Typeface.SANS_SERIF
-        }
+//        binding?.textEncrypt?.apply {
+//            text = generateSecureCode()
+//            typeface = android.graphics.Typeface.SANS_SERIF
+//        }
     }
 
     private fun captureAndCrop(rootView: View, targetView: View) {
@@ -267,8 +316,14 @@ class MainFeature : AppCompatActivity() {
         }
 
         featureViewModel.latLon.observe(this) { latLon ->
-            binding?.timeMarkView?.txtLatAndLon?.text = "Toạ độ: %.5f, %.5f".format(latLon.first, latLon.second)
-//            binding?.imgMapGg?.loadStaticMap(latLon.first, latLon.second, BuildConfig.API_KEY)
+            binding?.timeMarkView?.txtLatAndLon?.text =
+                String.format(
+                    Locale.US,
+                    "Toạ độ: %.6f°N, %.6f°E",
+                    latLon.first,
+                    latLon.second
+                )
+
         }
 
         featureViewModel.fullName.observe(this) {
@@ -288,7 +343,7 @@ class MainFeature : AppCompatActivity() {
         }
 
         featureViewModel.isEnableGoogleMap.observe(this) {
-            binding?.imgMapGg?.isVisible = it
+//            binding?.imgMapGg?.isVisible = it
             binding?.timeMarkView?.txtLatAndLon?.isVisible = it
         }
     }
@@ -623,5 +678,23 @@ class MainFeature : AppCompatActivity() {
         canvas.restore()
         return result
     }
+
+    private fun applyCommonFont() {
+        val textViews = listOf(
+            binding?.timeMarkView?.txtDay,
+            binding?.timeMarkView?.txtDateFormater,
+            binding?.timeMarkView?.txtAddress,
+            binding?.timeMarkView?.txtNameUser,
+            binding?.timeMarkView?.txtLatAndLon,
+            binding?.textTitle,
+        )
+
+        textViews.forEach {
+            it?.typeface = commonTypeface
+            it?.letterSpacing = 0.02f
+            it?.setShadowLayer(3.5f, 0.6f, 0.6f, Color.parseColor("#90000000"));
+        }
+    }
+
 
 }

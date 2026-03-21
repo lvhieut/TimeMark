@@ -105,7 +105,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:visibility="invisible"
+            android:visibility="visible"
             android:paddingStart="16dp"
             android:weightSum="1">
 
@@ -114,7 +114,6 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textSize="@dimen/dimen_20sp"
                 android:text="Hiển thị bản đồ" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
@@ -228,8 +227,6 @@
                 android:layout_marginEnd="30dp" />
 
         </LinearLayout>
-
-
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btbSaveAction"

@@ -51,7 +51,7 @@
                 android:paddingBottom="4dp"
                 android:text="@string/text_time_formater"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="12.5sp" />
 
             <TextView
                 android:id="@+id/txtDay"
@@ -61,7 +61,7 @@
                 android:paddingTop="4dp"
                 android:text="@string/text_day_demo"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp" />
+                android:textSize="12.5sp" />
 
         </LinearLayout>
 
@@ -75,7 +75,7 @@
         android:paddingStart="6dp"
         android:text="@string/text_address"
         android:textColor="#FFFFFF"
-        android:textSize="12sp"
+        android:textSize="12.5sp"
         app:layout_constraintBottom_toTopOf="@+id/txtNameUser"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -87,9 +87,8 @@
         android:maxLines="2"
         android:paddingStart="6dp"
         android:text="@string/name_fake"
-        android:layout_marginBottom="4dp"
         android:textColor="@color/white"
-        android:textSize="12sp"
+        android:textSize="12.5sp"
         app:layout_constraintBottom_toTopOf="@+id/txtLatAndLon"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -103,7 +102,7 @@
         android:paddingStart="6dp"
         tools:text="@string/name_fake"
         android:textColor="@color/white"
-        android:textSize="12sp"
+        android:textSize="12.5sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

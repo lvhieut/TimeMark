@@ -33,6 +33,10 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 
+const val TIME_SPACING_RATIO = 0.03f
+const val TIME_COLON_WIDTH_RATIO = 0.30f
+const val TIME_COLON_SIDE_SPACING_RATIO = 0.05f
+
 fun View.slideAnimation(
     direction: SlideDirection,
     type: SlideType,
@@ -120,15 +124,27 @@ fun Context.getAndroidID(): String {
 fun drawTimeWithDigitPng(
     context: Context,
     canvas: Canvas,
-    time: String,              // ví dụ "08:45"
+    time: String,
     startX: Float,
-    baseLineY: Float,          // y đáy của số
-    digitHeight: Float,        // chiều cao số
-    spacingRatio: Float = 0.03f
+    baseLineY: Float,
+    digitHeight: Float,
+    spacingRatio: Float = TIME_SPACING_RATIO
 ): Float {
 
     val spacing = digitHeight * spacingRatio
-    val colonWidth = digitHeight * 0.24f
+    val colonWidth = digitHeight * TIME_COLON_WIDTH_RATIO
+    val colonSideSpacing = digitHeight * TIME_COLON_SIDE_SPACING_RATIO
+
+    fun getSpacingAfter(index: Int): Float {
+        if (index >= time.lastIndex) return 0f
+        val currentChar = time[index]
+        val nextChar = time[index + 1]
+        return if (currentChar == ':' || nextChar == ':') {
+            colonSideSpacing
+        } else {
+            spacing
+        }
+    }
 
     var x = startX
     var totalWidth = 0f
@@ -149,15 +165,14 @@ fun drawTimeWithDigitPng(
                 }
                 BitmapFactory.decodeResource(context.resources, resId, opt)
                 digitHeight * (opt.outWidth.toFloat() / opt.outHeight)
-            } else 0f
+            } else {
+                0f
+            }
         }
 
-        if (index < time.lastIndex) {
-            totalWidth += spacing
-        }
+        totalWidth += getSpacingAfter(index)
     }
 
-    // ===== Paint cho dấu : =====
     val colonPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         style = Paint.Style.FILL
@@ -166,21 +181,24 @@ fun drawTimeWithDigitPng(
     // ===== Pass 2: vẽ từng ký tự =====
     time.forEachIndexed { index, c ->
         if (c == ':') {
-            val dotWidth = digitHeight * 0.1f
-            val dotHeight = digitHeight * 0.26f
+            val dotWidth = digitHeight * 0.13f
+            val dotHeight = digitHeight * 0.18f
+
+            val dotLeft = x + (colonWidth - dotWidth) / 2f
 
             canvas.drawRect(
-                x + dotWidth,
+                dotLeft,
                 baseLineY - digitHeight * 0.65f,
-                x + dotWidth * 2,
-                baseLineY - digitHeight * 0.45f,
+                dotLeft + dotWidth,
+                baseLineY - digitHeight * 0.65f + dotHeight,
                 colonPaint
             )
+
             canvas.drawRect(
-                x + dotWidth,
+                dotLeft,
                 baseLineY - digitHeight * 0.25f,
-                x + dotWidth * 2,
-                baseLineY - digitHeight * 0.05f,
+                dotLeft + dotWidth,
+                baseLineY - digitHeight * 0.25f + dotHeight,
                 colonPaint
             )
 
@@ -206,9 +224,7 @@ fun drawTimeWithDigitPng(
             }
         }
 
-        if (index < time.lastIndex) {
-            x += spacing
-        }
+        x += getSpacingAfter(index)
     }
 
     return totalWidth
