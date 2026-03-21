@@ -63,6 +63,7 @@ import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.log
 
 class MainFeature : AppCompatActivity() {
 
@@ -150,6 +151,17 @@ class MainFeature : AppCompatActivity() {
 
         val name = PrefHelper.getName(this)
         val address = PrefHelper.getAddress(this)
+        val latAndLon = PrefHelper.getLocation(this)
+
+        if (latAndLon.first != null && latAndLon.second != null) {
+            binding?.timeMarkView?.txtLatAndLon?.text =
+                String.format(
+                    Locale.US,
+                    "Toạ độ: %.6f°N, %.6f°E",
+                    latAndLon.first,
+                    latAndLon.second
+                )
+        }
 
         if (name.isNotEmpty()) {
             binding?.timeMarkView?.txtNameUser?.text = name
@@ -462,6 +474,7 @@ class MainFeature : AppCompatActivity() {
             currentLat = location.latitude
             currentLon = location.longitude
             featureViewModel.setLatLon(currentLat, currentLon)
+            PrefHelper.saveLocation(this, currentLat, currentLon)
 
             CoroutineScope(Dispatchers.IO).launch {
                 try {

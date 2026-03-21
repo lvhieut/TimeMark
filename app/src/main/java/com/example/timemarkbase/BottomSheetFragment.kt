@@ -2,13 +2,16 @@ package com.example.timemarkbase
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import com.example.timemarkbase.databinding.FragmentBottomSheetBinding
+import com.example.timemarkbase.utils.PrefHelper
 import com.example.timemarkbase.view_model.MainFeatureViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import java.util.Locale
 
 class BottomSheetFragment : BottomSheetDialogFragment() {
 
@@ -71,10 +74,14 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         featureViewModel.address.observe(viewLifecycleOwner) {
             binding?.textEditAddres?.setText(it)
         }
+        val (lat, lon) = PrefHelper.getLocation(requireContext())
+        if (lat != null && lon != null) {
+            featureViewModel.setLatLon(lat, lon)
+        }
 
         featureViewModel.latLon.observe(viewLifecycleOwner) {
-            binding?.textLatitude?.setText(it.first.toString())
-            binding?.textLongitude?.setText(it.second.toString())
+            binding?.textLatitude?.setText(it.first.round6().toString())
+            binding?.textLongitude?.setText(it.second.round6().toString())
         }
 
 
@@ -109,6 +116,27 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         featureViewModel.setAddress(binding?.textEditAddres?.text.toString())
         featureViewModel.setTime(binding?.textEditTime?.text.toString())
         featureViewModel.setDate(binding?.textEditDayMonth?.text.toString())
+        val lat = binding?.textLatitude?.text
+            ?.toString()
+            ?.replace(",", ".")
+            ?.toDouble()
+
+        val lon = binding?.textLongitude?.text
+            ?.toString()
+            ?.replace(",", ".")
+            ?.toDouble()
+
+        if (lat != null && lon != null) {
+            featureViewModel.setLatLon(
+                lat,
+                lon
+            )
+        }
+        PrefHelper.saveLocation(
+            requireContext(),
+            binding?.textLatitude?.text.toString().toDouble().round6(),
+            binding?.textLongitude?.text.toString().toDouble().round6()
+        )
         binding?.btnSwitchEnableName?.isChecked
             ?.let { featureViewModel.setEnableFullName(it) }
 
@@ -121,6 +149,10 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         binding?.btnSwitchGoogleMap?.isChecked
             ?.let { featureViewModel.setEnableImageGoogleMap(it) }
         dismiss()
+    }
+
+    fun Double.round6(): Double {
+        return String.format(Locale.US, "%.6f", this).toDouble()
     }
 
 
