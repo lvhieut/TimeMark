@@ -27,7 +27,10 @@ class SplashActivity : AppCompatActivity() {
     private lateinit var remoteConfig: FirebaseRemoteConfig
     private var daysLeft: Int = -1
     //build without fetconfig
-    private var modeBuild: Boolean = false
+    companion object {
+        //test mode
+        const val modeBuild: Boolean = true
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +69,9 @@ class SplashActivity : AppCompatActivity() {
     private fun goNextSelect() {
         if (isFinishing) return
         val intent = Intent(this, SelectModeEditImageActivity::class.java)
-        intent.putExtra("expiry_warning", "Tài khoản sắp hết hạn sau $daysLeft ngày")
+        if (!modeBuild) {
+            intent.putExtra("expiry_warning", "Tài khoản sắp hết hạn sau $daysLeft ngày")
+        }
         startActivity(intent)
         finish()
     }

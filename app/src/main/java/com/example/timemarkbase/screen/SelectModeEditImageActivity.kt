@@ -32,13 +32,17 @@ class SelectModeEditImageActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        val message = intent.getStringExtra("expiry_warning")
-        if (!message.isNullOrEmpty()) {
-            ExpiryWarningDialog(message).show(
-                supportFragmentManager,
-                "expiry_dialog"
-            )
+
+        if (!SplashActivity.modeBuild) {
+            val message = intent.getStringExtra("expiry_warning")
+            if (!message.isNullOrEmpty()) {
+                ExpiryWarningDialog(message).show(
+                    supportFragmentManager,
+                    "expiry_dialog"
+                )
+            }
         }
+
         btnChooseCamera = findViewById(R.id.chooseCamera)
         btnChooseImage = findViewById(R.id.chooseImage)
 
