@@ -43,7 +43,6 @@ import com.example.timemarkbase.BottomSheetFragment
 import com.example.timemarkbase.BuildConfig
 import com.example.timemarkbase.R
 import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
-import com.example.timemarkbase.utils.PrefHelper
 import com.example.timemarkbase.utils.RemoveBlackBgTransformation
 import com.example.timemarkbase.utils.SelectMode
 import com.example.timemarkbase.utils.loadLocationMap
@@ -148,21 +147,8 @@ class MainFeature : AppCompatActivity() {
             insets
         }
 
-        val name = PrefHelper.getName(this)
-        val address = PrefHelper.getAddress(this)
-
-        if (name.isNotEmpty()) {
-            binding?.timeMarkView?.txtNameUser?.text = name
-        }
-
-        if (address.isEmpty()) {
-            checkLocationPermissionAndGetAddress()
-        } else {
-            binding?.timeMarkView?.txtAddress?.text = address
-        }
-
         initObserve()
-
+        checkLocationPermissionAndGetAddress()
         getDateFormater()
         getTimeFormatter()
         //check second time
@@ -204,12 +190,7 @@ class MainFeature : AppCompatActivity() {
 
         binding?.commonToolbarWrapper?.btnEditInformation?.setOnClickListener {
             BottomSheetFragment().show(supportFragmentManager, null)
-            val nameUser = binding?.timeMarkView?.txtNameUser?.text.toString()
-            val addressDetail = binding?.timeMarkView?.txtAddress?.text.toString()
 
-            // save lại
-            PrefHelper.saveName(this, nameUser)
-            PrefHelper.saveAddress(this, addressDetail)
             featureViewModel.setFullName(binding?.timeMarkView?.txtNameUser?.text.toString())
             featureViewModel.setDay(binding?.timeMarkView?.txtDay?.text.toString())
             featureViewModel.setAddress(binding?.timeMarkView?.txtAddress?.text.toString())
@@ -231,22 +212,10 @@ class MainFeature : AppCompatActivity() {
         }
 
         binding?.commonToolbarWrapper?.iconBack?.setOnClickListener {
-            val nameUser = binding?.timeMarkView?.txtNameUser?.text.toString()
-            val addressDetail = binding?.timeMarkView?.txtAddress?.text.toString()
-
-            // save lại
-            PrefHelper.saveName(this, nameUser)
-            PrefHelper.saveAddress(this, addressDetail)
             finish()
         }
 
         onBackPressedDispatcher.addCallback(this) {
-            val nameUser = binding?.timeMarkView?.txtNameUser?.text.toString()
-            val addressDetail = binding?.timeMarkView?.txtAddress?.text.toString()
-
-            // save lại
-            PrefHelper.saveName(this@MainFeature, nameUser)
-            PrefHelper.saveAddress(this@MainFeature, addressDetail)
             finish()
         }
 

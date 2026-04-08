@@ -26,6 +26,8 @@ class SplashActivity : AppCompatActivity() {
 
     private lateinit var remoteConfig: FirebaseRemoteConfig
     private var daysLeft: Int = -1
+    //build without fetconfig
+    private var modeBuild: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +39,11 @@ class SplashActivity : AppCompatActivity() {
             insets
         }
         initRemoteConfig()
-        fetchConfigAndNavigate()
+        if (modeBuild) {
+            goNextSelect()
+        } else {
+            fetchConfigAndNavigate()
+        }
     }
 
     private fun fetchConfigAndNavigate() {
