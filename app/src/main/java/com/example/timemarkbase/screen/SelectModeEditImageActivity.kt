@@ -13,6 +13,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.timemarkbase.R
 import com.example.timemarkbase.utils.ExpiryWarningDialog
+import com.example.timemarkbase.utils.PolicyDisclaimerDialog
+import com.example.timemarkbase.utils.PolicyDisclaimerPrefs
 
 class SelectModeEditImageActivity : AppCompatActivity() {
 
@@ -33,15 +35,7 @@ class SelectModeEditImageActivity : AppCompatActivity() {
             insets
         }
 
-        if (!SplashActivity.modeBuild) {
-            val message = intent.getStringExtra("expiry_warning")
-            if (!message.isNullOrEmpty()) {
-                ExpiryWarningDialog(message).show(
-                    supportFragmentManager,
-                    "expiry_dialog"
-                )
-            }
-        }
+        showPolicyDisclaimerIfNeeded()
 
         btnChooseCamera = findViewById(R.id.chooseCamera)
         btnChooseImage = findViewById(R.id.chooseImage)
@@ -57,6 +51,30 @@ class SelectModeEditImageActivity : AppCompatActivity() {
         }
 
         requestCameraPermissionIfNeeded()
+    }
+
+    private fun showPolicyDisclaimerIfNeeded() {
+        if (PolicyDisclaimerPrefs.hasAcceptedPolicy(this)) {
+            showExpiryWarningIfNeeded()
+            return
+        }
+
+        PolicyDisclaimerDialog {
+            PolicyDisclaimerPrefs.setAcceptedPolicy(this)
+            showExpiryWarningIfNeeded()
+        }.show(supportFragmentManager, "policy_disclaimer_dialog")
+    }
+
+    private fun showExpiryWarningIfNeeded() {
+        if (SplashActivity.modeBuild) return
+
+        val message = intent.getStringExtra("expiry_warning")
+        if (!message.isNullOrEmpty()) {
+            ExpiryWarningDialog(message).show(
+                supportFragmentManager,
+                "expiry_dialog"
+            )
+        }
     }
 
     private fun hasCameraPermission(): Boolean {

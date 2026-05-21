@@ -43,6 +43,7 @@ import com.example.timemarkbase.BottomSheetFragment
 import com.example.timemarkbase.BuildConfig
 import com.example.timemarkbase.R
 import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
+import com.example.timemarkbase.utils.MainFeaturePrefs
 import com.example.timemarkbase.utils.RemoveBlackBgTransformation
 import com.example.timemarkbase.utils.SelectMode
 import com.example.timemarkbase.utils.loadLocationMap
@@ -135,7 +136,7 @@ class MainFeature : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(binding?.root)
         //setting default value
-        featureViewModel.setEnableFullName(true)
+        featureViewModel.setEnableFullName(false)
         featureViewModel.setEnableLogo(false)
         featureViewModel.setEnableVerifiedText(true)
         featureViewModel.setEnableImageGoogleMap(false)
@@ -148,6 +149,7 @@ class MainFeature : AppCompatActivity() {
         }
 
         initObserve()
+        loadSavedFullName()
         checkLocationPermissionAndGetAddress()
         getDateFormater()
         getTimeFormatter()
@@ -297,6 +299,7 @@ class MainFeature : AppCompatActivity() {
 
         featureViewModel.fullName.observe(this) {
             binding?.timeMarkView?.txtNameUser?.text = it
+            MainFeaturePrefs.saveFullName(this, it)
         }
 
         featureViewModel.isEnableFullName.observe(this) {
@@ -314,6 +317,12 @@ class MainFeature : AppCompatActivity() {
         featureViewModel.isEnableGoogleMap.observe(this) {
 //            binding?.imgMapGg?.isVisible = it
             binding?.timeMarkView?.txtLatAndLon?.isVisible = it
+        }
+    }
+
+    private fun loadSavedFullName() {
+        MainFeaturePrefs.getFullName(this)?.let { savedFullName ->
+            featureViewModel.setFullName(savedFullName)
         }
     }
 
@@ -506,36 +515,75 @@ class MainFeature : AppCompatActivity() {
     private fun captureImageViewAndSave(
         activity: Activity,
         bitmap: Bitmap,
-        fileName: String = "timemark_capture_${System.currentTimeMillis()}.jpg"
+        fileName: String = "timemark_${System.currentTimeMillis()}.jpg"
     ) {
-        val contentValues = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // ===== ANDROID 10+ =====
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/TimeMark")
                 put(MediaStore.Images.Media.IS_PENDING, 1)
             }
-        }
 
-        val resolver = activity.contentResolver
-        val imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            val resolver = activity.contentResolver
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
 
-        imageUri?.let { uri ->
-            resolver.openOutputStream(uri).use { output ->
-                if (output != null) {
+            uri?.let {
+                resolver.openOutputStream(it)?.use { output ->
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 95, output)
                 }
-            }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 contentValues.clear()
                 contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
-                resolver.update(uri, contentValues, null, null)
+                resolver.update(it, contentValues, null, null)
+
+                showGrayToast(activity, "Đã lưu ảnh")
             }
 
-            showGrayToast(activity, "Đã lưu ảnh vào thư viện")
-        } ?: run {
-            showGrayToast(activity, "Lưu ảnh thất bại")
+        } else {
+            // ===== ANDROID 8–9 =====
+            if (ActivityCompat.checkSelfPermission(
+                    activity,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    activity,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    2001
+                )
+                return
+            }
+
+            val directory = android.os.Environment.getExternalStoragePublicDirectory(
+                android.os.Environment.DIRECTORY_PICTURES
+            )
+
+            val folder = java.io.File(directory, "TimeMark")
+            if (!folder.exists()) folder.mkdirs()
+
+            val file = java.io.File(folder, fileName)
+
+            try {
+                val output = java.io.FileOutputStream(file)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 95, output)
+                output.flush()
+                output.close()
+
+                // 👉 Scan để hiện trong gallery
+                android.media.MediaScannerConnection.scanFile(
+                    activity,
+                    arrayOf(file.absolutePath),
+                    arrayOf("image/jpeg"),
+                    null
+                )
+
+                showGrayToast(activity, "Đã lưu ảnh")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                showGrayToast(activity, "Lưu ảnh thất bại")
+            }
         }
     }
 

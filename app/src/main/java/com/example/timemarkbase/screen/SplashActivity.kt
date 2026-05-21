@@ -29,7 +29,7 @@ class SplashActivity : AppCompatActivity() {
     //build without fetconfig
     companion object {
         //test mode
-        const val modeBuild: Boolean = true
+        const val modeBuild: Boolean = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
