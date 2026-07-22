@@ -34,6 +34,7 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
             saveAction()
         }
         binding?.btnSwitchEnableName?.setOnCheckedChangeListener { _, isChecked ->
+            updateNameInputVisibility(isChecked)
             featureViewModel.setEnableFullName(isChecked)
         }
 
@@ -80,6 +81,7 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
 
         featureViewModel.isEnableFullName.observe(viewLifecycleOwner) {
             binding?.btnSwitchEnableName?.isChecked = it
+            updateNameInputVisibility(it)
         }
 
         featureViewModel.isEnableLogo.observe(viewLifecycleOwner) {
@@ -101,6 +103,10 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
                 binding?.textLon?.visibility = View.GONE
             }
         }
+    }
+
+    private fun updateNameInputVisibility(isVisible: Boolean) {
+        binding?.textEditNameLayout?.visibility = if (isVisible) View.VISIBLE else View.GONE
     }
 
     private fun saveAction() {

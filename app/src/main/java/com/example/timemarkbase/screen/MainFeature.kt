@@ -46,6 +46,7 @@ import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
 import com.example.timemarkbase.utils.MainFeaturePrefs
 import com.example.timemarkbase.utils.RemoveBlackBgTransformation
 import com.example.timemarkbase.utils.SelectMode
+import com.example.timemarkbase.utils.UserPrefs
 import com.example.timemarkbase.utils.loadLocationMap
 import com.example.timemarkbase.utils.loadMapSnapshot
 import com.example.timemarkbase.utils.loadStaticMap
@@ -136,10 +137,12 @@ class MainFeature : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(binding?.root)
         //setting default value
-        featureViewModel.setEnableFullName(false)
         featureViewModel.setEnableLogo(false)
         featureViewModel.setEnableVerifiedText(true)
-        featureViewModel.setEnableImageGoogleMap(false)
+
+        //Update saving status
+        featureViewModel.setEnableImageGoogleMap(UserPrefs.isEnableImageGoogleMap(this))
+        featureViewModel.setEnableFullName(UserPrefs.isEnableFullName(this))
 
         // Padding system bars
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -303,6 +306,7 @@ class MainFeature : AppCompatActivity() {
         }
 
         featureViewModel.isEnableFullName.observe(this) {
+            UserPrefs.saveEnableFullName(this, it)
             binding?.timeMarkView?.txtNameUser?.isVisible = it
         }
 
@@ -315,6 +319,7 @@ class MainFeature : AppCompatActivity() {
         }
 
         featureViewModel.isEnableGoogleMap.observe(this) {
+            UserPrefs.saveEnableImageGoogleMap(this, it)
 //            binding?.imgMapGg?.isVisible = it
             binding?.timeMarkView?.txtLatAndLon?.isVisible = it
         }
