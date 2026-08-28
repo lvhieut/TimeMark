@@ -153,6 +153,7 @@ class MainFeature : AppCompatActivity() {
 
         initObserve()
         loadSavedFullName()
+        loadSavedLatLon()
         checkLocationPermissionAndGetAddress()
         getDateFormater()
         getTimeFormatter()
@@ -290,6 +291,8 @@ class MainFeature : AppCompatActivity() {
         }
 
         featureViewModel.latLon.observe(this) { latLon ->
+            currentLat = latLon.first
+            currentLon = latLon.second
             binding?.timeMarkView?.txtLatAndLon?.text =
                 String.format(
                     Locale.US,
@@ -328,6 +331,14 @@ class MainFeature : AppCompatActivity() {
     private fun loadSavedFullName() {
         MainFeaturePrefs.getFullName(this)?.let { savedFullName ->
             featureViewModel.setFullName(savedFullName)
+        }
+    }
+
+    private fun loadSavedLatLon() {
+        MainFeaturePrefs.getLatLon(this)?.let { savedLatLon ->
+            currentLat = savedLatLon.first
+            currentLon = savedLatLon.second
+            featureViewModel.setLatLon(savedLatLon.first, savedLatLon.second)
         }
     }
 
@@ -442,9 +453,11 @@ class MainFeature : AppCompatActivity() {
                 return@getCurrentLocation
             }
 
-            currentLat = location.latitude
-            currentLon = location.longitude
-            featureViewModel.setLatLon(currentLat, currentLon)
+            if (MainFeaturePrefs.getLatLon(activity) == null) {
+                currentLat = location.latitude
+                currentLon = location.longitude
+                featureViewModel.setLatLon(currentLat, currentLon)
+            }
 
             CoroutineScope(Dispatchers.IO).launch {
                 try {

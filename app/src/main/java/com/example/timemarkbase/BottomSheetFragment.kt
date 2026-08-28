@@ -5,8 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import com.example.timemarkbase.databinding.FragmentBottomSheetBinding
+import com.example.timemarkbase.utils.MainFeaturePrefs
 import com.example.timemarkbase.view_model.MainFeatureViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -110,11 +112,14 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun saveAction() {
+        if (!saveLatLonIfValid()) return
+
         featureViewModel.setFullName(binding?.textEditName?.text.toString())
         featureViewModel.setDay(binding?.textEditDay?.text.toString())
         featureViewModel.setAddress(binding?.textEditAddres?.text.toString())
         featureViewModel.setTime(binding?.textEditTime?.text.toString())
         featureViewModel.setDate(binding?.textEditDayMonth?.text.toString())
+
         binding?.btnSwitchEnableName?.isChecked
             ?.let { featureViewModel.setEnableFullName(it) }
 
@@ -129,5 +134,33 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         dismiss()
     }
 
+    private fun saveLatLonIfValid(): Boolean {
+        val latitude = binding?.textLatitude?.text
+            ?.toString()
+            ?.trim()
+            ?.replace(',', '.')
+            ?.toDoubleOrNull()
+        val longitude = binding?.textLongitude?.text
+            ?.toString()
+            ?.trim()
+            ?.replace(',', '.')
+            ?.toDoubleOrNull()
+
+        if (latitude == null || longitude == null) {
+            Toast.makeText(requireContext(), "Vĩ độ hoặc kinh độ không hợp lệ", Toast.LENGTH_SHORT)
+                .show()
+            return false
+        }
+
+        if (latitude !in -90.0..90.0 || longitude !in -180.0..180.0) {
+            Toast.makeText(requireContext(), "Vĩ độ hoặc kinh độ ngoài phạm vi hợp lệ", Toast.LENGTH_SHORT)
+                .show()
+            return false
+        }
+
+        featureViewModel.setLatLon(latitude, longitude)
+        MainFeaturePrefs.saveLatLon(requireContext(), latitude, longitude)
+        return true
+    }
 
 }
