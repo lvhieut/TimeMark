@@ -42,7 +42,12 @@ import com.bumptech.glide.request.transition.Transition
 import com.example.timemarkbase.BottomSheetFragment
 import com.example.timemarkbase.BuildConfig
 import com.example.timemarkbase.R
+import com.example.timemarkbase.TimeMarkTemplateBottomSheetFragment
 import com.example.timemarkbase.databinding.ActivityMainFeatureBinding
+import com.example.timemarkbase.model.TimeMarkContent
+import com.example.timemarkbase.time_mark.BaseTimeMarkView
+import com.example.timemarkbase.time_mark.TimeMarkStyle
+import com.example.timemarkbase.time_mark.TimeMarkViewFactory
 import com.example.timemarkbase.utils.MainFeaturePrefs
 import com.example.timemarkbase.utils.RemoveBlackBgTransformation
 import com.example.timemarkbase.utils.SelectMode
@@ -127,6 +132,7 @@ class MainFeature : AppCompatActivity() {
     private var currentVerifiedCode = ""
     private var currentLat: Double = 0.0
     private var currentLon: Double = 0.0
+    private var currentTimeMarkView: BaseTimeMarkView? = null
     private val commonTypeface: Typeface by lazy {
         Typeface.create("sans-serif-condensed", Typeface.NORMAL)
     }
@@ -143,6 +149,8 @@ class MainFeature : AppCompatActivity() {
         //Update saving status
         featureViewModel.setEnableImageGoogleMap(UserPrefs.isEnableImageGoogleMap(this))
         featureViewModel.setEnableFullName(UserPrefs.isEnableFullName(this))
+        featureViewModel.setEnableFullNameCompany(MainFeaturePrefs.isEnableCompanyName(this))
+        featureViewModel.setSelectedTimeMarkStyle(MainFeaturePrefs.getTimeMarkStyle(this))
 
         // Padding system bars
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -153,6 +161,7 @@ class MainFeature : AppCompatActivity() {
 
         initObserve()
         loadSavedFullName()
+        loadSavedCompanyName()
         loadSavedLatLon()
         checkLocationPermissionAndGetAddress()
         getDateFormater()
@@ -197,17 +206,15 @@ class MainFeature : AppCompatActivity() {
         binding?.commonToolbarWrapper?.btnEditInformation?.setOnClickListener {
             BottomSheetFragment().show(supportFragmentManager, null)
 
-            featureViewModel.setFullName(binding?.timeMarkView?.txtNameUser?.text.toString())
-            featureViewModel.setDay(binding?.timeMarkView?.txtDay?.text.toString())
-            featureViewModel.setAddress(binding?.timeMarkView?.txtAddress?.text.toString())
-            binding?.timeMarkView?.txtTime?.let { timeView ->
-                featureViewModel.setTime(timeView.getTime())
-            }
-            featureViewModel.setDate(binding?.timeMarkView?.txtDateFormater?.text.toString())
+            ensureEditValues()
+        }
+
+        binding?.commonToolbarWrapper?.btnChangeTemplate?.setOnClickListener {
+            TimeMarkTemplateBottomSheetFragment().show(supportFragmentManager, null)
         }
 
         binding?.commonToolbarWrapper?.btnSaveImage?.setOnClickListener {
-            binding?.csLayoutMainContent?.let { csLayoutMainContent ->
+            binding?.csLayoutMainContent?.let {
                 val root = binding?.csLayoutMainContent ?: return@setOnClickListener
                 val imageView = binding?.imgPreview ?: return@setOnClickListener
                 captureAndCrop(
@@ -275,62 +282,76 @@ class MainFeature : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun initObserve() {
         featureViewModel.time.observe(this) {
-            binding?.timeMarkView?.txtTime?.setTime(it)
+            bindTimeMarkContent()
         }
 
         featureViewModel.day.observe(this) {
-            binding?.timeMarkView?.txtDay?.text = it
+            bindTimeMarkContent()
         }
 
         featureViewModel.date.observe(this) {
-            binding?.timeMarkView?.txtDateFormater?.text = it
+            bindTimeMarkContent()
         }
 
         featureViewModel.address.observe(this) {
-            binding?.timeMarkView?.txtAddress?.text = it
+            bindTimeMarkContent()
         }
 
         featureViewModel.latLon.observe(this) { latLon ->
             currentLat = latLon.first
             currentLon = latLon.second
-            binding?.timeMarkView?.txtLatAndLon?.text =
-                String.format(
-                    Locale.US,
-                    "Toạ độ: %.6f°N, %.6f°E",
-                    latLon.first,
-                    latLon.second
-                )
-
+            bindTimeMarkContent()
         }
 
         featureViewModel.fullName.observe(this) {
-            binding?.timeMarkView?.txtNameUser?.text = it
             MainFeaturePrefs.saveFullName(this, it)
+            bindTimeMarkContent()
+        }
+
+        featureViewModel.companyName.observe(this) {
+            MainFeaturePrefs.saveCompanyName(this, it)
+            bindTimeMarkContent()
         }
 
         featureViewModel.isEnableFullName.observe(this) {
             UserPrefs.saveEnableFullName(this, it)
-            binding?.timeMarkView?.txtNameUser?.isVisible = it
+            bindTimeMarkContent()
+        }
+
+        featureViewModel.isEnableFullNameCompany.observe(this) {
+            MainFeaturePrefs.saveEnableCompanyName(this, it)
+            bindTimeMarkContent()
         }
 
         featureViewModel.isEnableLogo.observe(this) {
             binding?.imgLogoCompany?.isVisible = it
         }
 
-        featureViewModel.isEnableVerifiedText.observe(this) { isShow ->
+        featureViewModel.isEnableVerifiedText.observe(this) {
             updateWatermark()
         }
 
         featureViewModel.isEnableGoogleMap.observe(this) {
             UserPrefs.saveEnableImageGoogleMap(this, it)
 //            binding?.imgMapGg?.isVisible = it
-            binding?.timeMarkView?.txtLatAndLon?.isVisible = it
+            bindTimeMarkContent()
+        }
+
+        featureViewModel.selectedTimeMarkStyle.observe(this) { style ->
+            MainFeaturePrefs.saveTimeMarkStyle(this, style)
+            renderTimeMarkView(style)
         }
     }
 
     private fun loadSavedFullName() {
         MainFeaturePrefs.getFullName(this)?.let { savedFullName ->
             featureViewModel.setFullName(savedFullName)
+        }
+    }
+
+    private fun loadSavedCompanyName() {
+        MainFeaturePrefs.getCompanyName(this)?.let { savedCompanyName ->
+            featureViewModel.setCompanyName(savedCompanyName)
         }
     }
 
@@ -354,7 +375,7 @@ class MainFeature : AppCompatActivity() {
         ) {
             checkLocationPermissionAndGetAddress()
         } else {
-            binding?.timeMarkView?.txtAddress?.text = "Không có quyền vị trí"
+            featureViewModel.setAddress("Không có quyền vị trí")
         }
     }
 
@@ -365,7 +386,7 @@ class MainFeature : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             getCurrentAddress(this) { result ->
-                binding?.timeMarkView?.txtAddress?.text = result ?: "Không xác định địa chỉ"
+                featureViewModel.setAddress(result ?: "Không xác định địa chỉ")
             }
         } else {
             ActivityCompat.requestPermissions(
@@ -388,9 +409,21 @@ class MainFeature : AppCompatActivity() {
         val formatter = SimpleDateFormat(patternDate, Locale("vi"))
         val dayFormatter = SimpleDateFormat(patternDay, Locale("vi"))
         val formattedDate = formatter.format(currentDate)
-        val formattedDay = dayFormatter.format(currentDate)
-        binding?.timeMarkView?.txtDateFormater?.text = formattedDate
-        binding?.timeMarkView?.txtDay?.text = formattedDay
+        val formattedDay = dayFormatter.format(currentDate).capitalizeVietnameseWords()
+        featureViewModel.setDate(formattedDate)
+        featureViewModel.setDay(formattedDay)
+    }
+
+    private fun String.capitalizeVietnameseWords(): String {
+        return split(" ").joinToString(" ") { word ->
+            word.replaceFirstChar { firstChar ->
+                if (firstChar.isLowerCase()) {
+                    firstChar.titlecase(Locale("vi"))
+                } else {
+                    firstChar.toString()
+                }
+            }
+        }
     }
 
     private fun openGallery(from: String) {
@@ -417,7 +450,55 @@ class MainFeature : AppCompatActivity() {
         val currentDate = Date()
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         val formattedTime = timeFormatter.format(currentDate)
-        binding?.timeMarkView?.txtTime?.setTime(formattedTime)
+        featureViewModel.setTime(formattedTime)
+    }
+
+    private fun ensureEditValues() {
+        if (featureViewModel.time.value.isNullOrBlank()) {
+            getTimeFormatter()
+        }
+        if (featureViewModel.date.value.isNullOrBlank() || featureViewModel.day.value.isNullOrBlank()) {
+            getDateFormater()
+        }
+    }
+
+    private fun renderTimeMarkView(style: TimeMarkStyle) {
+        val container = binding?.timeMarkContainer ?: return
+        val view = TimeMarkViewFactory.create(this, style)
+        container.removeAllViews()
+        container.addView(
+            view,
+            android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+        currentTimeMarkView = view
+        bindTimeMarkContent()
+        applyCommonFont()
+    }
+
+    private fun bindTimeMarkContent() {
+        currentTimeMarkView?.bind(buildTimeMarkContent())
+    }
+
+    private fun buildTimeMarkContent(): TimeMarkContent {
+        val latLon = featureViewModel.latLon.value
+        return TimeMarkContent(
+            time = featureViewModel.time.value.orEmpty(),
+            date = featureViewModel.date.value.orEmpty(),
+            day = featureViewModel.day.value.orEmpty(),
+            address = featureViewModel.address.value ?: getString(R.string.text_address),
+            fullName = featureViewModel.fullName.value.orEmpty(),
+            companyName = featureViewModel.companyName.value.orEmpty(),
+            latitude = latLon?.first,
+            longitude = latLon?.second,
+            showFullName = featureViewModel.isEnableFullName.value ?: true,
+            showCompanyName = featureViewModel.isEnableFullNameCompany.value ?: true,
+            showLogo = featureViewModel.isEnableLogo.value ?: false,
+            showVerifiedText = featureViewModel.isEnableVerifiedText.value ?: false,
+            showGoogleMap = featureViewModel.isEnableGoogleMap.value ?: false
+        )
     }
 
     private fun updateWatermark() {
@@ -633,7 +714,6 @@ class MainFeature : AppCompatActivity() {
 
         val result = original.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(result)
-        val density = context.resources.displayMetrics.density
         val width = result.width.toFloat()
         val height = result.height.toFloat()
 
@@ -715,16 +795,9 @@ class MainFeature : AppCompatActivity() {
     }
 
     private fun applyCommonFont() {
-        val textViews = listOf(
-            binding?.timeMarkView?.txtDay,
-            binding?.timeMarkView?.txtDateFormater,
-            binding?.timeMarkView?.txtAddress,
-            binding?.timeMarkView?.txtNameUser,
-            binding?.timeMarkView?.txtLatAndLon,
-            binding?.textTitle,
-        )
+        currentTimeMarkView?.applyCommonStyle()
 
-        textViews.forEach {
+        listOf(binding?.textTitle).forEach {
             it?.typeface = commonTypeface
             it?.letterSpacing = 0.02f
             it?.setShadowLayer(3.5f, 0.6f, 0.6f, Color.parseColor("#90000000"));

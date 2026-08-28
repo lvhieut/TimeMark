@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:id="@+id/compactRoot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="2dp"
+        tools:background = "@color/black"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/txtNameUser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/name_fake"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Họ Tên SM : Nguyễn Thanh Hạ" />
+
+        <TextView
+            android:id="@+id/txtCompany"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            tools:text="Npp : Vĩnh Hà - Đông Anh"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/compactInfoBlock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical">
+
+            <View
+                android:id="@+id/viewLineCompact"
+                android:layout_width="2dp"
+                android:layout_height="0dp"
+                android:background="#F4B527"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="3dp"
+                app:layout_constraintBottom_toBottomOf="@+id/txtLatAndLon"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/txtDateFormater" />
+
+            <com.example.timemarkbase.custom_view.TimeDigitView
+                android:id="@+id/txtTime"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/txtDay"
+                android:layout_width="wrap_content"
+                android:layout_height="1dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"/>
+
+            <TextView
+                android:id="@+id/txtDateFormater"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="11dp"
+                android:maxLines="1"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                app:layout_constraintStart_toEndOf="@+id/viewLineCompact"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Thứ Năm, 27 Tháng 8, 2026 19:07" />
+
+            <TextView
+                android:id="@+id/txtAddress"
+                android:layout_width="@dimen/dimen_200dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:maxLines="1"
+                android:text="@string/text_address"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                app:layout_constraintStart_toStartOf="@+id/txtDateFormater"
+                app:layout_constraintTop_toBottomOf="@+id/txtDateFormater"
+                tools:text="Định, Thành Phố Hà Nội, X. Đại Thanh" />
+
+            <TextView
+                android:id="@+id/txtLatAndLon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/txtDateFormater"
+                app:layout_constraintTop_toBottomOf="@+id/txtAddress"
+                tools:text="20.932826, 105.802384" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</merge>

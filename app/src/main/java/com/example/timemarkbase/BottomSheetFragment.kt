@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import com.example.timemarkbase.databinding.FragmentBottomSheetBinding
+import com.example.timemarkbase.time_mark.TimeMarkStyle
 import com.example.timemarkbase.utils.MainFeaturePrefs
 import com.example.timemarkbase.view_model.MainFeatureViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -38,6 +39,10 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         binding?.btnSwitchEnableName?.setOnCheckedChangeListener { _, isChecked ->
             updateNameInputVisibility(isChecked)
             featureViewModel.setEnableFullName(isChecked)
+        }
+
+        binding?.btnSwitchEnableNameCompany?.setOnCheckedChangeListener { _, isChecked ->
+            featureViewModel.setEnableFullNameCompany(isChecked)
         }
 
         binding?.btnSwitchEnableLogo?.setOnCheckedChangeListener { _, isChecked ->
@@ -71,6 +76,10 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
             binding?.textEditName?.setText(it)
         }
 
+        featureViewModel.companyName.observe(viewLifecycleOwner) {
+            binding?.textEditCompany?.setText(it)
+        }
+
         featureViewModel.address.observe(viewLifecycleOwner) {
             binding?.textEditAddres?.setText(it)
         }
@@ -84,6 +93,11 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         featureViewModel.isEnableFullName.observe(viewLifecycleOwner) {
             binding?.btnSwitchEnableName?.isChecked = it
             updateNameInputVisibility(it)
+        }
+
+        featureViewModel.isEnableFullNameCompany.observe(viewLifecycleOwner) {
+            binding?.btnSwitchEnableNameCompany?.isChecked = it
+            updateCompanyInputVisibility()
         }
 
         featureViewModel.isEnableLogo.observe(viewLifecycleOwner) {
@@ -105,16 +119,29 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
                 binding?.textLon?.visibility = View.GONE
             }
         }
+
+        featureViewModel.selectedTimeMarkStyle.observe(viewLifecycleOwner) {
+            updateCompanyInputVisibility()
+        }
     }
 
     private fun updateNameInputVisibility(isVisible: Boolean) {
         binding?.textEditNameLayout?.visibility = if (isVisible) View.VISIBLE else View.GONE
     }
 
+    private fun updateCompanyInputVisibility() {
+        val isCompact = featureViewModel.selectedTimeMarkStyle.value == TimeMarkStyle.COMPACT
+        val isCompanyEnabled = featureViewModel.isEnableFullNameCompany.value ?: true
+        binding?.enableNameCompany?.visibility = if (isCompact) View.VISIBLE else View.GONE
+        binding?.textEditCompanyLayout?.visibility =
+            if (isCompact && isCompanyEnabled) View.VISIBLE else View.GONE
+    }
+
     private fun saveAction() {
         if (!saveLatLonIfValid()) return
 
         featureViewModel.setFullName(binding?.textEditName?.text.toString())
+        featureViewModel.setCompanyName(binding?.textEditCompany?.text.toString())
         featureViewModel.setDay(binding?.textEditDay?.text.toString())
         featureViewModel.setAddress(binding?.textEditAddres?.text.toString())
         featureViewModel.setTime(binding?.textEditTime?.text.toString())
@@ -122,6 +149,9 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
 
         binding?.btnSwitchEnableName?.isChecked
             ?.let { featureViewModel.setEnableFullName(it) }
+
+        binding?.btnSwitchEnableNameCompany?.isChecked
+            ?.let { featureViewModel.setEnableFullNameCompany(it) }
 
         binding?.btnSwitchEnableLogo?.isChecked
             ?.let { featureViewModel.setEnableLogo(it) }

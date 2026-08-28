@@ -52,12 +52,11 @@
             android:scaleType="fitCenter"
             android:background="@color/black"
             app:layout_constraintWidth_percent="0.4"
-            app:layout_constraintBottom_toTopOf="@+id/timeMarkView"
-            app:layout_constraintStart_toStartOf="@+id/timeMarkView" />
+            app:layout_constraintBottom_toTopOf="@+id/timeMarkContainer"
+            app:layout_constraintStart_toStartOf="@+id/timeMarkContainer" />
 
-        <include
-            android:id="@+id/timeMarkView"
-            layout="@layout/view_time_mark_overlay"
+        <FrameLayout
+            android:id="@+id/timeMarkContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
